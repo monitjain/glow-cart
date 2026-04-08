@@ -7,7 +7,7 @@
   <title>Glow Cart — Premium Store</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
 </head>
 <body>
 
@@ -114,11 +114,14 @@
           <a href="/product/{{ product.id }}/" class="card-name">{{ product.name }}</a>
           <div class="card-footer-row">
             <span class="card-price">₹{{ product.price }}</span>
-            <button class="card-cart-btn"
-              data-name="{{ product.name|escapejs }}"
-              data-price="{{ product.price|default:'0' }}"
-              onclick="handleCart(this)" title="Add to cart">🛒</button>
           </div>
+          <button class="add-to-cart-btn"
+            data-name="{{ product.name|escapejs }}"
+            data-price="{{ product.price|default:'0' }}"
+            onclick="handleCart(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+            Add to Cart
+          </button>
         </div>
       </div>
       {% empty %}
@@ -240,7 +243,7 @@
     </div>
     <div class="footer-bottom">
       <p>© 2025 Glow Cart. All rights reserved.</p>
-      <p>Made with ✦ for premium shoppers</p>
+      <p>✨ Where Trends Light Up Your Life ✨</p>
     </div>
   </footer>
 
@@ -261,9 +264,10 @@
       let t = document.getElementById("toast");
       t.classList.add("show");
       setTimeout(() => t.classList.remove("show"), 2500);
-      let orig = btn.innerText;
-      btn.innerText = "✓";
-      setTimeout(() => { btn.innerText = orig; }, 1500);
+      let orig = btn.innerHTML;
+      btn.innerHTML = "✓ Added!";
+      btn.style.background = "#2ecc71";
+      setTimeout(() => { btn.innerHTML = orig; btn.style.background = ""; }, 1500);
     }
 
     updateCount();

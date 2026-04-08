@@ -25,6 +25,11 @@ urlpatterns = [
     path('dashboard/customers/', views.manage_customers, name='manage_customers'),
 ]
 
-# For media and static files
+# For media and static files (always serve in dev)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / 'store/static')
+
+# Serve media in production too (Render/whitenoise doesn't handle media)
+from django.views.static import serve
+from django.urls import re_path
+urlpatterns += [re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT})]

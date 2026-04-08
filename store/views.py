@@ -64,31 +64,39 @@ def checkout(request):
         except (ValueError, TypeError):
             item_lines = items
 
-        promo_line = f"Promo Code: {promo}\n" if promo else ""
-        discount_line = f"Discount: -\u20b9{float(discount):.2f}\n" if float(discount) > 0 else ""
-        shipping_line = f"Shipping: \u20b9{float(shipping):.2f}\n" if float(shipping) > 0 else "Shipping: Free\n"
+        promo_line    = f"  Promo Code  : {promo}\n" if promo else ""
+        discount_line = f"  Discount    : -\u20b9{float(discount):.2f}\n" if float(discount) > 0 else ""
+        shipping_line = f"  Shipping    : \u20b9{float(shipping):.2f}\n" if float(shipping) > 0 else "  Shipping    : FREE \u2713\n"
 
         email_body = (
-            f"Hi {name},\n\n"
-            f"Thank you for your order at Glow Cart! \U0001f389\n\n"
-            f"Order #{order.id}\n"
-            f"{'\u2500' * 30}\n"
+            f"Dear {name},\n\n"
+            f"Thank you for shopping with Glow Cart! \U0001f6cd\ufe0f\n"
+            f"Your order has been confirmed and is being processed.\n\n"
+            f"{'=' * 40}\n"
+            f"  ORDER DETAILS  (Order #{order.id})\n"
+            f"{'=' * 40}\n"
             f"{item_lines}\n"
-            f"{'\u2500' * 30}\n"
+            f"{'─' * 40}\n"
             f"{promo_line}"
             f"{discount_line}"
             f"{shipping_line}"
-            f"Total: \u20b9{order.total}\n\n"
-            f"Delivery Address: {address}\n"
-            f"Phone: {phone}\n\n"
-            f"We will notify you once your order is shipped.\n\n"
-            f"\u2014 Glow Cart Team"
+            f"  Total Payable : \u20b9{order.total}\n"
+            f"  Payment Mode  : Cash on Delivery (COD)\n"
+            f"{'=' * 40}\n\n"
+            f"  Delivery Address : {address}\n"
+            f"  Phone            : {phone}\n\n"
+            f"We will deliver your order soon. \U0001f69a\n\n"
+            f"{'─' * 40}\n"
+            f"Thank you for shopping with Glow Cart\n"
+            f"\u2728 Where Trends Light Up Your Life \u2728\n"
+            f"{'─' * 40}\n"
+            f"Support: glowcart0811@gmail.com\n"
         )
 
         recipient = request.user.email or request.POST.get('email', '')
         if recipient:
             send_mail(
-                subject=f"Order Confirmed #{order.id} - Glow Cart",
+                subject=f"\U0001f6cd\ufe0f Order Confirmed - Glow Cart (Order #{order.id})",
                 message=email_body,
                 from_email=None,
                 recipient_list=[recipient],
