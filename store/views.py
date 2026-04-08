@@ -96,7 +96,7 @@ def checkout(request):
         recipient = request.user.email or request.POST.get('email', '')
         if recipient:
             send_mail(
-                subject=f"\U0001f6cd\ufe0f Order Confirmed - Glow Cart (Order #{order.id})",
+                subject=f"Your Order is Confirmed \u2013 Glow Cart \u2726 (Order #{order.id})",
                 message=email_body,
                 from_email=None,
                 recipient_list=[recipient],
