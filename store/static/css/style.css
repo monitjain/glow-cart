@@ -16,10 +16,13 @@
 
 /* ── Reset ── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+html { scroll-behavior: smooth; overflow-x: hidden; }
+body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; overflow-x: hidden; }
 a { text-decoration: none; color: inherit; }
-img { display: block; width: 100%; }
+img { display: block; max-width: 100%; height: auto; }
+
+/* ── CONTAINER ── */
+.container { max-width: 1200px; margin: 0 auto; padding: 0 24px; width: 100%; }
 
 /* ── NAVBAR ── */
 .navbar {
@@ -170,8 +173,11 @@ img { display: block; width: 100%; }
 
 /* ── PRODUCTS GRID ── */
 .products-grid {
-  display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-  gap: 28px; max-width: 1300px; margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 28px;
+  max-width: 1300px;
+  margin: 0 auto;
 }
 .product-card {
   background: var(--card-bg); border-radius: var(--radius);
