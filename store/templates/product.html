@@ -6,14 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ product.name }} — Glow Cart</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=6">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
   <nav class="navbar scrolled" id="navbar">
     <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
     <div class="nav-links" id="nav-links">
       <a href="/">Home</a>
-      <a href="/cart/" class="nav-cart">🛒 <span id="cart-count">0</span></a>
+      <a href="/cart/" class="nav-cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:4px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        Cart (<span id="cart-count">0</span>)
+      </a>
       {% if user.is_authenticated %}
         <a href="/orders/">My Orders</a>
         {% if user.is_staff %}<a href="/dashboard/">Dashboard</a>{% endif %}
