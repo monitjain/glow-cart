@@ -1,0 +1,30 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Order Placed — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
+</head>
+<body>
+  <nav class="navbar scrolled">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/orders/">My Orders</a>
+    </div>
+  </nav>
+
+  <div class="success-wrapper">
+    <div class="success-icon">🎉</div>
+    <h2>Order Placed Successfully!</h2>
+    <p>Thank you for shopping with Glow Cart.<br>Your order is being processed and you'll receive a confirmation email shortly.</p>
+    <div class="success-actions">
+      <a href="/" class="btn-gold">Continue Shopping →</a>
+      <a href="/orders/" class="btn-outline">View My Orders</a>
+    </div>
+  </div>
+</body>
+</html>

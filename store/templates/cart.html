@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cart — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
+</head>
+<body>
+
+  <nav class="navbar scrolled" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/">Home</a>
+      <a href="/cart/" class="nav-cart">🛒 <span id="cart-count">0</span></a>
+      {% if user.is_authenticated %}
+        <a href="/orders/">My Orders</a>
+        {% if user.is_staff %}<a href="/dashboard/">Dashboard</a>{% endif %}
+        <form method="POST" action="/logout/" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+        </form>
+      {% else %}
+        <a href="/login/" class="btn-outline-nav">Login</a>
+        <a href="/signup/" class="btn-gold-nav">Sign Up</a>
+      {% endif %}
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <div class="cart-wrapper">
+    <h2>Your Cart 🛒</h2>
+    <div id="cart-container"></div>
+  </div>
+
+  <script>
+    function getCart() { return JSON.parse(localStorage.getItem("cart")) || []; }
+
+    function buildCartMap(cart) {
+      let map = {};
+      cart.forEach(item => {
+        let price = parseFloat(item.price) || 0;
+        if (map[item.name]) { map[item.name].qty += 1; }
+        else { map[item.name] = { name: item.name, price: price, qty: 1 }; }
+      });
+      return Object.values(map);
+    }
+
+    function saveAndRender(items) {
+      let flat = [];
+      items.forEach(item => {
+        for (let i = 0; i < item.qty; i++) flat.push({ name: item.name, price: item.price });
+      });
+      localStorage.setItem("cart", JSON.stringify(flat));
+      render(items, flat.length);
+    }
+
+    function render(items, totalCount) {
+      document.getElementById("cart-count").innerText = totalCount;
+      let container = document.getElementById("cart-container");
+      if (items.length === 0) {
+        container.innerHTML = `<div class="empty-cart"><p>🛒 Your cart is empty.</p><a href="/">Continue Shopping</a></div>`;
+        return;
+      }
+      let total = 0, html = "";
+      items.forEach((item, index) => {
+        total += item.price * item.qty;
+        html += `
+          <div class="cart-item">
+            <div class="item-info">
+              <div class="item-name">${item.name}</div>
+              <div class="item-price">₹${item.price.toFixed(2)} each</div>
+            </div>
+            <div class="qty-controls">
+              <button onclick="changeQty(${index}, -1)">−</button>
+              <span>${item.qty}</span>
+              <button onclick="changeQty(${index}, 1)">+</button>
+            </div>
+            <button class="remove-btn" onclick="removeItem(${index})" title="Remove">✕</button>
+          </div>`;
+      });
+      html += `
+        <div class="cart-footer">
+          <span class="total-label">Total</span>
+          <span class="total-amount">₹${total.toFixed(2)}</span>
+        </div>
+        <a href="/checkout/" class="checkout-btn">Proceed to Checkout →</a>`;
+      container.innerHTML = html;
+    }
+
+    function changeQty(index, delta) {
+      let items = buildCartMap(getCart());
+      items[index].qty += delta;
+      if (items[index].qty < 1) items.splice(index, 1);
+      saveAndRender(items);
+    }
+
+    function removeItem(index) {
+      let items = buildCartMap(getCart());
+      items.splice(index, 1);
+      saveAndRender(items);
+    }
+
+    function initCart() {
+      let cart = getCart();
+      render(buildCartMap(cart), cart.length);
+    }
+
+    window.addEventListener("pageshow", initCart);
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("nav-links").classList.toggle("open");
+    });
+  </script>
+</body>
+</html>

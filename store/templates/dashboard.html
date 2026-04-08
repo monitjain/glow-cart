@@ -1,0 +1,301 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4">
+  <style>
+    .dash-layout { display: flex; min-height: 100vh; padding-top: 64px; }
+
+    /* Sidebar */
+    .dash-sidebar {
+      width: 240px; flex-shrink: 0;
+      background: #080f18;
+      border-right: 1px solid var(--border);
+      padding: 32px 0;
+      position: fixed; top: 64px; left: 0; bottom: 0;
+      overflow-y: auto;
+    }
+    .sidebar-label {
+      font-size: 10px; font-weight: 600; color: var(--text-muted);
+      letter-spacing: 2px; text-transform: uppercase;
+      padding: 0 24px; margin: 24px 0 8px;
+    }
+    .sidebar-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 11px 24px; font-size: 14px; font-weight: 500;
+      color: var(--text-muted); transition: var(--transition);
+      border-left: 3px solid transparent;
+    }
+    .sidebar-link:hover, .sidebar-link.active {
+      color: var(--gold); background: rgba(212,175,55,0.07);
+      border-left-color: var(--gold);
+    }
+    .sidebar-link span { font-size: 18px; }
+
+    /* Main content */
+    .dash-main { margin-left: 240px; flex: 1; padding: 36px 40px 60px; }
+
+    /* Header */
+    .dash-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 36px; flex-wrap: wrap; gap: 12px; }
+    .dash-header h2 { font-family: 'Playfair Display', serif; font-size: 28px; color: #fff; }
+    .dash-header p { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .dash-date { font-size: 13px; color: var(--text-muted); background: var(--card-bg); border: 1px solid var(--border); padding: 8px 16px; border-radius: 20px; }
+
+    /* Stat cards */
+    .dash-stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
+    .dash-stat-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 24px 22px;
+      display: flex; align-items: center; gap: 18px;
+      transition: var(--transition); cursor: default;
+    }
+    .dash-stat-card:hover { transform: translateY(-4px); border-color: rgba(212,175,55,0.4); box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+    .dash-icon { width: 54px; height: 54px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+    .dash-icon-gold  { background: rgba(212,175,55,0.15); }
+    .dash-icon-teal  { background: rgba(77,182,172,0.15); }
+    .dash-icon-blue  { background: rgba(100,149,237,0.15); }
+    .dash-icon-green { background: rgba(46,204,113,0.15); }
+    .dash-icon-red   { background: rgba(231,76,60,0.15); }
+    .dash-stat-val { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: #fff; line-height: 1; }
+    .dash-stat-label { font-size: 12px; color: var(--text-muted); margin-top: 5px; }
+
+    /* Quick actions */
+    .quick-actions { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
+    .action-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 22px 20px;
+      text-align: center; transition: var(--transition);
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+    }
+    .action-card:hover { transform: translateY(-4px); border-color: var(--gold); box-shadow: 0 12px 28px rgba(212,175,55,0.12); }
+    .action-icon { font-size: 32px; }
+    .action-title { font-size: 14px; font-weight: 600; color: var(--text); }
+    .action-sub { font-size: 12px; color: var(--text-muted); }
+
+    /* Status grid */
+    .dash-status-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 36px; }
+    .dash-status-card {
+      background: var(--card-bg); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 20px; text-align: center;
+      transition: var(--transition);
+    }
+    .dash-status-card:hover { border-color: rgba(212,175,55,0.4); }
+    .dash-status-count { font-family: 'Playfair Display', serif; font-size: 34px; font-weight: 700; color: #fff; }
+
+    /* Section title */
+    .dash-section-title { font-size: 16px; font-weight: 600; color: var(--text); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .dash-section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+    /* Table */
+    .dash-table-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+    .dash-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+    .dash-table thead th { background: rgba(255,255,255,0.03); padding: 14px 18px; text-align: left; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .dash-table tbody td { padding: 14px 18px; color: var(--text); border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .dash-table tbody tr:last-child td { border-bottom: none; }
+    .dash-table tbody tr:hover { background: rgba(255,255,255,0.02); }
+    .dash-no-orders { text-align: center; padding: 48px; color: var(--text-muted); font-size: 14px; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-pending   { background: rgba(212,175,55,0.15); color: var(--gold);   border: 1px solid rgba(212,175,55,0.3); }
+    .badge-confirmed { background: rgba(77,182,172,0.15);  color: var(--teal);  border: 1px solid rgba(77,182,172,0.3); }
+    .badge-shipped   { background: rgba(100,149,237,0.15); color: #6495ed;      border: 1px solid rgba(100,149,237,0.3); }
+    .badge-delivered { background: rgba(46,204,113,0.15);  color: #2ecc71;      border: 1px solid rgba(46,204,113,0.3); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .dash-sidebar { display: none; }
+      .dash-main { margin-left: 0; padding: 20px 16px 40px; }
+      .dash-status-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .dash-status-grid { grid-template-columns: 1fr 1fr; }
+      .dash-table thead { display: none; }
+      .dash-table td { display: block; padding: 8px 16px; }
+      .dash-table td::before { content: attr(data-label); font-weight: 600; color: var(--text-muted); margin-right: 8px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar scrolled" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/">🏪 Store</a>
+      <a href="/dashboard/" class="nav-cart">📊 Dashboard</a>
+      <form method="POST" action="/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+      </form>
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <div class="dash-layout">
+
+    <!-- SIDEBAR -->
+    <aside class="dash-sidebar">
+      <div class="sidebar-label">Overview</div>
+      <a href="/dashboard/" class="sidebar-link active"><span>📊</span> Dashboard</a>
+
+      <div class="sidebar-label">Manage</div>
+      <a href="{% url 'manage_orders' %}" class="sidebar-link"><span>📦</span> All Orders</a>
+      <a href="{% url 'manage_products' %}" class="sidebar-link"><span>🛍️</span> Products</a>
+      <a href="{% url 'manage_customers' %}" class="sidebar-link"><span>👥</span> Customers</a>
+
+      <div class="sidebar-label">System</div>
+      <a href="/admin/" class="sidebar-link"><span>⚙️</span> Django Admin</a>
+      <a href="/" class="sidebar-link"><span>🏪</span> View Store</a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="dash-main">
+
+      <!-- Header -->
+      <div class="dash-header">
+        <div>
+          <h2>Admin Dashboard</h2>
+          <p>Welcome back, {{ user.username }} ✦</p>
+        </div>
+        <div class="dash-date" id="dash-date"></div>
+      </div>
+
+      <!-- Stat Cards -->
+      <div class="dash-stat-grid">
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-gold">📦</div>
+          <div>
+            <div class="dash-stat-val">{{ total_orders }}</div>
+            <div class="dash-stat-label">Total Orders</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-green">💰</div>
+          <div>
+            <div class="dash-stat-val">₹{{ total_revenue }}</div>
+            <div class="dash-stat-label">Total Revenue</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-teal">👥</div>
+          <div>
+            <div class="dash-stat-val">{{ total_users }}</div>
+            <div class="dash-stat-label">Registered Users</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-blue">🛍️</div>
+          <div>
+            <div class="dash-stat-val">{{ total_products }}</div>
+            <div class="dash-stat-label">Total Products</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-red">⏳</div>
+          <div>
+            <div class="dash-stat-val">{{ status_counts.Pending }}</div>
+            <div class="dash-stat-label">Pending Orders</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-green">✅</div>
+          <div>
+            <div class="dash-stat-val">{{ status_counts.Delivered }}</div>
+            <div class="dash-stat-label">Delivered Orders</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <p class="dash-section-title">Quick Actions</p>
+      <div class="quick-actions">
+        <a href="{% url 'manage_orders' %}" class="action-card">
+          <div class="action-icon">📦</div>
+          <div class="action-title">Manage Orders</div>
+          <div class="action-sub">View &amp; update all orders</div>
+        </a>
+        <a href="{% url 'manage_products' %}" class="action-card">
+          <div class="action-icon">🛍️</div>
+          <div class="action-title">Manage Products</div>
+          <div class="action-sub">Add, edit, delete products</div>
+        </a>
+        <a href="{% url 'manage_customers' %}" class="action-card">
+          <div class="action-icon">👥</div>
+          <div class="action-title">Manage Customers</div>
+          <div class="action-sub">View customer details</div>
+        </a>
+        <a href="/admin/" class="action-card">
+          <div class="action-icon">⚙️</div>
+          <div class="action-title">Django Admin</div>
+          <div class="action-sub">Full admin panel</div>
+        </a>
+      </div>
+
+      <!-- Status Breakdown -->
+      <p class="dash-section-title">Orders by Status</p>
+      <div class="dash-status-grid">
+        <div class="dash-status-card">
+          <div class="dash-status-count">{{ status_counts.Pending }}</div>
+          <span class="badge badge-pending">Pending</span>
+        </div>
+        <div class="dash-status-card">
+          <div class="dash-status-count">{{ status_counts.Confirmed }}</div>
+          <span class="badge badge-confirmed">Confirmed</span>
+        </div>
+        <div class="dash-status-card">
+          <div class="dash-status-count">{{ status_counts.Shipped }}</div>
+          <span class="badge badge-shipped">Shipped</span>
+        </div>
+        <div class="dash-status-card">
+          <div class="dash-status-count">{{ status_counts.Delivered }}</div>
+          <span class="badge badge-delivered">Delivered</span>
+        </div>
+      </div>
+
+      <!-- Recent Orders -->
+      <p class="dash-section-title">Recent Orders</p>
+      <div class="dash-table-card">
+        {% if latest_orders %}
+        <table class="dash-table">
+          <thead>
+            <tr>
+              <th>#</th><th>Customer</th><th>Name</th><th>Phone</th><th>Total</th><th>Status</th><th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for order in latest_orders %}
+            <tr>
+              <td data-label="#">#{{ order.id }}</td>
+              <td data-label="Customer">{{ order.user.username|default:"Guest" }}</td>
+              <td data-label="Name">{{ order.name }}</td>
+              <td data-label="Phone">{{ order.phone }}</td>
+              <td data-label="Total">₹{{ order.total }}</td>
+              <td data-label="Status"><span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span></td>
+              <td data-label="Action">
+                <a href="{% url 'manage_orders' %}" style="color:var(--gold);font-size:13px;font-weight:600;">Update →</a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="dash-no-orders">No orders yet.</p>
+        {% endif %}
+      </div>
+
+    </main>
+  </div>
+
+  <script>
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("nav-links").classList.toggle("open");
+    });
+    document.getElementById("dash-date").innerText = new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+  </script>
+</body>
+</html>

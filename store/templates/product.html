@@ -1,0 +1,95 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ product.name }} — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
+</head>
+<body>
+  <nav class="navbar scrolled" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/">Home</a>
+      <a href="/cart/" class="nav-cart">🛒 <span id="cart-count">0</span></a>
+      {% if user.is_authenticated %}
+        <a href="/orders/">My Orders</a>
+        {% if user.is_staff %}<a href="/dashboard/">Dashboard</a>{% endif %}
+        <form method="POST" action="/logout/" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+        </form>
+      {% else %}
+        <a href="/login/" class="btn-outline-nav">Login</a>
+        <a href="/signup/" class="btn-gold-nav">Sign Up</a>
+      {% endif %}
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <div class="product-container">
+    <div class="product-img">
+      <img src="{{ product.image.url }}" alt="{{ product.name|escapejs }}" id="product-img">
+    </div>
+    <div class="product-details">
+      <p class="product-breadcrumb"><a href="/">Home</a> › {{ product.name }}</p>
+      <h2>{{ product.name }}</h2>
+      <p class="price">₹{{ product.price }}</p>
+      <div class="product-rating">★★★★☆ <span>4.0 / 5</span></div>
+      <p class="stock-badge">✔ In Stock</p>
+      {% if product.description %}
+        <p class="desc">{{ product.description }}</p>
+      {% endif %}
+      <div class="product-actions">
+        <button class="btn cart-btn"
+          data-name="{{ product.name|escapejs }}"
+          data-price="{{ product.price|default:'0' }}"
+          onclick="handleCart(this)">
+          Add to Cart 🛒
+        </button>
+        <button class="btn buy-btn"
+          data-name="{{ product.name|escapejs }}"
+          data-price="{{ product.price|default:'0' }}"
+          onclick="buyNow(this)">
+          Buy Now ⚡
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✓ Added to cart!</div>
+
+  <script>
+    function getCart() { return JSON.parse(localStorage.getItem("cart")) || []; }
+    function updateCount() { document.getElementById("cart-count").innerText = getCart().length; }
+
+    function handleCart(btn) {
+      let cart = getCart();
+      cart.push({ name: btn.getAttribute("data-name"), price: btn.getAttribute("data-price") });
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCount();
+      let t = document.getElementById("toast");
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2500);
+      btn.innerText = "Added ✓";
+      setTimeout(() => { btn.innerText = "Add to Cart 🛒"; }, 1500);
+    }
+
+    function buyNow(btn) {
+      localStorage.setItem("cart", JSON.stringify([{ name: btn.getAttribute("data-name"), price: btn.getAttribute("data-price") }]));
+      window.location.href = "/checkout/";
+    }
+
+    updateCount();
+    window.addEventListener("pageshow", updateCount);
+    window.addEventListener("scroll", () => {
+      document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 60);
+    });
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("nav-links").classList.toggle("open");
+    });
+  </script>
+</body>
+</html>

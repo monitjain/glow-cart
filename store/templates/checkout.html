@@ -1,0 +1,244 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4">
+  <style>
+    .promo-row { display: flex; gap: 10px; }
+    .promo-row input { flex: 1; }
+    .promo-btn { padding: 12px 18px; background: rgba(212,175,55,0.12); border: 1px solid var(--border); color: var(--gold); border-radius: 9px; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: var(--transition); }
+    .promo-btn:hover { background: var(--gold); color: #0D1B2A; }
+    .promo-msg { font-size: 13px; margin-top: 8px; font-weight: 600; }
+    .promo-success { color: #2ecc71; }
+    .promo-error   { color: #e74c3c; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; color: var(--text-muted); }
+    .summary-row.discount { color: #2ecc71; }
+    .summary-row.shipping { color: var(--teal); }
+    .summary-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
+    .free-ship-note { font-size: 12px; color: var(--teal); margin-top: 6px; text-align: center; }
+  </style>
+</head>
+<body>
+  <nav class="navbar scrolled">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/cart/" class="nav-cart">🛒</a>
+      <a href="/orders/">My Orders</a>
+    </div>
+  </nav>
+
+  <div id="page-content"></div>
+
+  <script>
+    // ── Promo codes
+    const PROMOS = {
+      'FLASH40':  { type: 'percent', value: 40,  label: '40% off (Flash Sale)' },
+      'NEW200':   { type: 'flat',    value: 200,  label: '\u20b9200 off (New User)' },
+      'WELCOME10':{ type: 'percent', value: 10,  label: '10% off (Welcome Offer)' },
+    };
+
+    const SHIPPING_CHARGE = 49;
+    const FREE_SHIP_ABOVE = 999;
+
+    let cart = JSON.parse(localStorage.getItem("cart")) || [];
+    let appliedPromo = null;
+
+    function buildCartMap() {
+      let map = {};
+      cart.forEach(item => {
+        if (map[item.name]) map[item.name].qty += 1;
+        else map[item.name] = { name: item.name, price: parseFloat(item.price), qty: 1 };
+      });
+      return Object.values(map);
+    }
+
+    let items = buildCartMap();
+    let subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
+
+    if (items.length === 0) {
+      document.getElementById("page-content").innerHTML = `
+        <div class="empty-cart" style="padding:120px 20px;">
+          <p>🛒 Your cart is empty.</p>
+          <a href="/">Go back and add items</a>
+        </div>`;
+    } else {
+      let summaryRows = items.map(i => `
+        <div class="checkout-item">
+          <span class="item-name">${i.name}</span>
+          <span class="item-qty">x${i.qty}</span>
+          <span class="item-subtotal">₹${(i.price * i.qty).toFixed(2)}</span>
+        </div>`).join("");
+
+      document.getElementById("page-content").innerHTML = `
+        <div class="checkout-wrapper">
+
+          <div class="checkout-form">
+            <h3>Delivery Details</h3>
+            <form method="POST" action="/checkout/" onsubmit="prepareSubmit()" autocomplete="off">
+              <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+              <input type="hidden" name="items" id="items-input">
+              <input type="hidden" name="total" id="total-input">
+              <input type="hidden" name="discount" id="discount-input">
+              <input type="hidden" name="shipping" id="shipping-input">
+              <input type="hidden" name="promo" id="promo-input">
+
+              <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" placeholder="Enter your full name" autocomplete="off" required>
+              </div>
+              <div class="form-group">
+                <label>Email (for order confirmation)</label>
+                <input type="email" name="email" placeholder="Enter your email" autocomplete="off" required>
+              </div>
+              <div class="form-group">
+                <label>Street Address</label>
+                <input type="text" name="street" placeholder="House no., Street, Area" autocomplete="off" required>
+              </div>
+              <div class="form-row">
+                <div class="form-group">
+                  <label>City</label>
+                  <input type="text" name="city" placeholder="City" autocomplete="off" required>
+                </div>
+                <div class="form-group">
+                  <label>State</label>
+                  <input type="text" name="state" placeholder="State" autocomplete="off" required>
+                </div>
+              </div>
+              <div class="form-group">
+                <label>PIN Code</label>
+                <input type="text" name="pincode" placeholder="6-digit PIN code" pattern="[0-9]{6}" title="Enter a valid 6-digit PIN" autocomplete="off" required>
+              </div>
+              <div class="form-group">
+                <label>Phone Number</label>
+                <input type="tel" name="phone" placeholder="10-digit mobile number" pattern="[0-9]{10}" title="Enter a valid 10-digit number" autocomplete="off" required>
+              </div>
+
+              <div class="form-group">
+                <label>Promo Code</label>
+                <div class="promo-row">
+                  <input type="text" id="promo-code-input" placeholder="Enter promo code (e.g. FLASH40)" autocomplete="off" style="text-transform:uppercase;">
+                  <button type="button" class="promo-btn" onclick="applyPromo()">Apply</button>
+                </div>
+                <p class="promo-msg" id="promo-msg"></p>
+              </div>
+
+              <button type="submit" class="place-order-btn">Place Order →</button>
+            </form>
+          </div>
+
+          <div class="order-summary">
+            <h3>Order Summary</h3>
+            ${summaryRows}
+            <hr class="summary-divider">
+            <div class="summary-row">
+              <span>Subtotal</span>
+              <span>₹${subtotal.toFixed(2)}</span>
+            </div>
+            <div class="summary-row discount" id="discount-row" style="display:none;">
+              <span id="discount-label">Discount</span>
+              <span id="discount-val"></span>
+            </div>
+            <div class="summary-row shipping" id="shipping-row">
+              <span>Shipping</span>
+              <span id="shipping-val">₹${subtotal >= FREE_SHIP_ABOVE ? '0 (Free)' : SHIPPING_CHARGE}</span>
+            </div>
+            <hr class="summary-divider">
+            <div class="summary-total">
+              <span>Total</span>
+              <span id="grand-total">₹${calcTotal(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE).toFixed(2)}</span>
+            </div>
+            <p class="free-ship-note" id="ship-note">${subtotal >= FREE_SHIP_ABOVE ? '✓ Free shipping applied!' : 'Free shipping on orders above ₹999'}</p>
+          </div>
+
+        </div>`;
+
+      updateHiddenFields(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE);
+    }
+
+    function calcTotal(discount, shipping) {
+      return Math.max(0, subtotal - discount + shipping);
+    }
+
+    function applyPromo() {
+      let code = document.getElementById("promo-code-input").value.trim().toUpperCase();
+      let msg  = document.getElementById("promo-msg");
+
+      if (!code) { msg.className = "promo-msg promo-error"; msg.innerText = "Please enter a promo code."; return; }
+
+      if (!PROMOS[code]) {
+        msg.className = "promo-msg promo-error";
+        msg.innerText = "Invalid promo code.";
+        appliedPromo = null;
+        updateSummary(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE);
+        return;
+      }
+
+      // WELCOME10 only for first-time users
+      if (code === 'WELCOME10' && !{{ is_first_order|yesno:'true,false' }}) {
+        msg.className = "promo-msg promo-error";
+        msg.innerText = "WELCOME10 is only valid for first-time orders.";
+        appliedPromo = null;
+        updateSummary(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE);
+        return;
+      }
+
+      appliedPromo = { code, ...PROMOS[code] };
+      msg.className = "promo-msg promo-success";
+      msg.innerText = `✓ "${code}" applied — ${appliedPromo.label}`;
+
+      let discount = 0;
+      let shipping = subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE;
+
+      if (appliedPromo.type === 'percent') {
+        discount = subtotal * (appliedPromo.value / 100);
+      } else if (appliedPromo.type === 'flat') {
+        discount = Math.min(appliedPromo.value, subtotal);
+      } else if (appliedPromo.type === 'shipping') {
+        shipping = 0;
+      }
+
+      updateSummary(discount, shipping);
+    }
+
+    function updateSummary(discount, shipping) {
+      let discountRow = document.getElementById("discount-row");
+      let discountVal = document.getElementById("discount-val");
+      let discountLabel = document.getElementById("discount-label");
+      let shippingVal = document.getElementById("shipping-val");
+      let grandTotal  = document.getElementById("grand-total");
+      let shipNote    = document.getElementById("ship-note");
+
+      if (discount > 0) {
+        discountRow.style.display = "flex";
+        discountLabel.innerText = appliedPromo ? appliedPromo.label : "Discount";
+        discountVal.innerText = "-₹" + discount.toFixed(2);
+      } else {
+        discountRow.style.display = "none";
+      }
+
+      shippingVal.innerText = shipping === 0 ? "₹0 (Free)" : "₹" + shipping;
+      let total = calcTotal(discount, shipping);
+      grandTotal.innerText = "₹" + total.toFixed(2);
+      shipNote.innerText = shipping === 0 ? "✓ Free shipping applied!" : "Free shipping on orders above ₹999";
+
+      updateHiddenFields(discount, shipping);
+    }
+
+    function updateHiddenFields(discount, shipping) {
+      let total = calcTotal(discount, shipping);
+      document.getElementById("items-input").value    = JSON.stringify(items.map(i => ({ name: i.name, price: i.price, qty: i.qty })));
+      document.getElementById("total-input").value    = total.toFixed(2);
+      document.getElementById("discount-input").value = discount.toFixed(2);
+      document.getElementById("shipping-input").value = shipping.toFixed(2);
+      document.getElementById("promo-input").value    = appliedPromo ? appliedPromo.code : "";
+    }
+
+    function prepareSubmit() { localStorage.removeItem("cart"); }
+  </script>
+</body>
+</html>

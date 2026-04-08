@@ -1,0 +1,77 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Orders — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=3">
+</head>
+<body>
+  <nav class="navbar scrolled" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/">Home</a>
+      <a href="/cart/" class="nav-cart">🛒</a>
+      <a href="/orders/">My Orders</a>
+      {% if user.is_staff %}<a href="/dashboard/">Dashboard</a>{% endif %}
+      <form method="POST" action="/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+      </form>
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <div class="orders-wrapper">
+    <h2>My Orders 📦</h2>
+
+    {% for order in orders %}
+    <div class="order-card">
+      <div class="order-header">
+        <span class="order-id">Order #{{ order.id }}</span>
+        <span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span>
+      </div>
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th>Product</th><th>Qty</th><th>Price</th><th>Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for item in order.items %}
+          <tr>
+            <td>{{ item.name }}</td>
+            <td>{{ item.qty }}</td>
+            <td>₹{{ item.price }}</td>
+            <td class="subtotal">₹{% widthratio item.price 1 item.qty %}</td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="4" style="color:var(--text-muted);">No item details</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="order-footer">
+        <div class="delivery-info">
+          <span>📍 {{ order.address }}</span>
+          <span>📞 {{ order.phone }}</span>
+        </div>
+        <div class="order-total">₹{{ order.total }}</div>
+      </div>
+    </div>
+    {% empty %}
+    <div class="orders-empty">
+      <p>You have no orders yet.</p>
+      <a href="/">Start Shopping →</a>
+    </div>
+    {% endfor %}
+  </div>
+
+  <script>
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("nav-links").classList.toggle("open");
+    });
+  </script>
+</body>
+</html>

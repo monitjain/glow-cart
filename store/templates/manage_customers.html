@@ -1,0 +1,109 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Customers — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=4">
+  <style>
+    .dash-layout{display:flex;min-height:100vh;padding-top:64px}
+    .dash-sidebar{width:240px;flex-shrink:0;background:#080f18;border-right:1px solid var(--border);padding:32px 0;position:fixed;top:64px;left:0;bottom:0;overflow-y:auto}
+    .sidebar-label{font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;padding:0 24px;margin:24px 0 8px}
+    .sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 24px;font-size:14px;font-weight:500;color:var(--text-muted);transition:var(--transition);border-left:3px solid transparent}
+    .sidebar-link:hover,.sidebar-link.active{color:var(--gold);background:rgba(212,175,55,0.07);border-left-color:var(--gold)}
+    .sidebar-link span{font-size:18px}
+    .dash-main{margin-left:240px;flex:1;padding:36px 40px 60px}
+    .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+    .dash-header h2{font-family:'Playfair Display',serif;font-size:26px;color:#fff}
+    .dash-header p{font-size:13px;color:var(--text-muted);margin-top:4px}
+    .dash-table-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
+    .dash-table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px}
+    .dash-table thead th{background:rgba(255,255,255,0.03);padding:14px 18px;text-align:left;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border)}
+    .dash-table tbody td{padding:14px 18px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+    .dash-table tbody tr:last-child td{border-bottom:none}
+    .dash-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+    .cust-avatar{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--gold),var(--teal));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:#0D1B2A;flex-shrink:0}
+    .cust-info{display:flex;align-items:center;gap:12px}
+    .no-customers{text-align:center;padding:48px;color:var(--text-muted);font-size:14px}
+    @media(max-width:900px){.dash-sidebar{display:none}.dash-main{margin-left:0;padding:20px 16px 40px}}
+  </style>
+</head>
+<body>
+  <nav class="navbar scrolled" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/">🏪 Store</a>
+      <a href="/dashboard/" class="nav-cart">📊 Dashboard</a>
+      <form method="POST" action="/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+      </form>
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <div class="sidebar-label">Overview</div>
+      <a href="/dashboard/" class="sidebar-link"><span>📊</span> Dashboard</a>
+      <div class="sidebar-label">Manage</div>
+      <a href="/dashboard/orders/" class="sidebar-link"><span>📦</span> All Orders</a>
+      <a href="/dashboard/products/" class="sidebar-link"><span>🛍️</span> Products</a>
+      <a href="/dashboard/customers/" class="sidebar-link active"><span>👥</span> Customers</a>
+      <div class="sidebar-label">System</div>
+      <a href="/admin/" class="sidebar-link"><span>⚙️</span> Django Admin</a>
+      <a href="/" class="sidebar-link"><span>🏪</span> View Store</a>
+    </aside>
+
+    <main class="dash-main">
+      <div class="dash-header">
+        <div>
+          <h2>👥 Customers</h2>
+          <p>{{ customers|length }} registered customer{{ customers|length|pluralize }}</p>
+        </div>
+        <a href="/dashboard/" class="btn-outline" style="padding:8px 20px;font-size:13px;">← Dashboard</a>
+      </div>
+
+      <div class="dash-table-card">
+        {% if customers %}
+        <table class="dash-table">
+          <thead>
+            <tr><th>Customer</th><th>Email</th><th>Joined</th><th>Orders</th><th>Total Spent</th></tr>
+          </thead>
+          <tbody>
+            {% for c in customers %}
+            <tr>
+              <td>
+                <div class="cust-info">
+                  <div class="cust-avatar">{{ c.username|first|upper }}</div>
+                  <span style="font-weight:600;">{{ c.username }}</span>
+                </div>
+              </td>
+              <td style="color:var(--text-muted);">{{ c.email|default:"—" }}</td>
+              <td style="color:var(--text-muted);">{{ c.joined }}</td>
+              <td>
+                <span style="background:rgba(77,182,172,0.15);color:var(--teal);border:1px solid rgba(77,182,172,0.3);padding:3px 12px;border-radius:20px;font-size:12px;font-weight:600;">
+                  {{ c.order_count }} order{{ c.order_count|pluralize }}
+                </span>
+              </td>
+              <td style="color:var(--gold);font-weight:700;">₹{{ c.total_spent }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="no-customers">No customers yet.</p>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+
+  <script>
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("nav-links").classList.toggle("open");
+    });
+  </script>
+</body>
+</html>

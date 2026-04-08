@@ -1,0 +1,317 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Glow Cart — Premium Store</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}?v=2">
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav class="navbar" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/">Home</a>
+      <a href="#offers">Offers</a>
+      <a href="/cart/" class="nav-cart">🛒 <span id="cart-count">0</span></a>
+      {% if user.is_authenticated %}
+        <a href="/orders/">My Orders</a>
+        {% if user.is_staff %}<a href="/dashboard/">Dashboard</a>{% endif %}
+        <form method="POST" action="/logout/" style="display:inline;">
+          {% csrf_token %}
+          <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+        </form>
+      {% else %}
+        <a href="/login/" class="btn-outline-nav">Login</a>
+        <a href="/signup/" class="btn-gold-nav">Sign Up</a>
+      {% endif %}
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero-section">
+    <div class="swiper hero-swiper">
+      <div class="swiper-wrapper">
+
+        <div class="swiper-slide hero-slide slide-1">
+          <div class="hero-content">
+            <p class="hero-tag">✦ New Arrivals 2026</p>
+            <h1>Elevate Your<br><span class="gold">Lifestyle</span></h1>
+            <p class="hero-sub">Curated premium products delivered to your door.</p>
+            <div class="hero-btns">
+              <a href="#products" class="btn-gold">Shop Now →</a>
+              <a href="#categories" class="btn-outline">Explore</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="swiper-slide hero-slide slide-2">
+          <div class="hero-content">
+            <p class="hero-tag">🔥 Limited Deals</p>
+            <h1>Trending<br><span class="teal">Products</span></h1>
+            <p class="hero-sub">Up to 40% off on top-rated items this week.</p>
+            <div class="hero-btns">
+              <a href="#offers" class="btn-gold">View Deals →</a>
+              <a href="#products" class="btn-outline">Browse All</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="swiper-slide hero-slide slide-3">
+          <div class="hero-content">
+            <p class="hero-tag">⭐ Exclusive Collection</p>
+            <h1>Luxury at<br><span class="gold">Every Price</span></h1>
+            <p class="hero-sub">Premium quality. Unbeatable value. Always.</p>
+            <div class="hero-btns">
+              <a href="#products" class="btn-gold">Discover →</a>
+              <a href="/signup/" class="btn-outline">Join Free</a>
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <div class="swiper-pagination hero-pagination"></div>
+      <div class="swiper-button-prev"></div>
+      <div class="swiper-button-next"></div>
+    </div>
+  </section>
+
+  <!-- STATS BAR -->
+  <div class="stats-bar">
+    <div class="stat"><span class="stat-num">1K+</span><span class="stat-label">Happy Customers</span></div>
+    <div class="stat"><span class="stat-num">4.9 ★</span><span class="stat-label">Avg Rating</span></div>
+    <div class="stat"><span class="stat-num">Free</span><span class="stat-label">Shipping ₹999+</span></div>
+  </div>
+
+  <!-- FEATURED PRODUCTS -->
+  <section class="section" id="products">
+    <div class="section-header reveal">
+      <p class="section-tag">Hand Picked</p>
+      <h2 class="section-title">Featured <span class="gold">Products</span></h2>
+    </div>
+    <div class="products-grid">
+      {% for product in products %}
+      <div class="product-card reveal">
+        <div class="card-img-wrap">
+          <a href="/product/{{ product.id }}/">
+            <img src="{{ product.image.url }}" alt="{{ product.name|escapejs }}" loading="lazy">
+          </a>
+          <div class="card-overlay">
+            <button class="quick-add"
+              data-name="{{ product.name|escapejs }}"
+              data-price="{{ product.price|default:'0' }}"
+              onclick="handleCart(this)">
+              + Quick Add
+            </button>
+          </div>
+        </div>
+        <div class="card-body">
+          <a href="/product/{{ product.id }}/" class="card-name">{{ product.name }}</a>
+          <div class="card-footer-row">
+            <span class="card-price">₹{{ product.price }}</span>
+            <button class="card-cart-btn"
+              data-name="{{ product.name|escapejs }}"
+              data-price="{{ product.price|default:'0' }}"
+              onclick="handleCart(this)" title="Add to cart">🛒</button>
+          </div>
+        </div>
+      </div>
+      {% empty %}
+      <p class="empty-msg">No products yet. Add some from the admin panel.</p>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- SPECIAL OFFERS -->
+  <section class="section offers-section" id="offers">
+    <div class="section-header reveal">
+      <p class="section-tag">This Week</p>
+      <h2 class="section-title">Special <span class="gold">Offers</span></h2>
+    </div>
+    <div class="offers-grid reveal">
+      <div class="offer-card offer-big">
+        <p class="offer-tag">🔥 Flash Sale</p>
+        <h3>Up to <span class="gold">40% Off</span></h3>
+        <p class="offer-desc">On all Tech &amp; Accessories</p>
+        <a href="#products" class="btn-gold">Grab Deal →</a>
+      </div>
+      <div class="offer-card">
+        <p class="offer-tag">⚡ Today Only</p>
+        <h3>Free <span class="teal">Shipping</span></h3>
+        <p class="offer-desc">On orders above ₹999</p>
+        <a href="#products" class="btn-outline">Shop Now</a>
+      </div>
+      <div class="offer-card">
+        <p class="offer-tag">🎁 First Order</p>
+        <h3><span class="gold">10% Off</span></h3>
+        <p class="offer-desc">Use code <strong style="color:var(--gold)">WELCOME10</strong> on your first order</p>
+        <a href="/signup/" class="btn-outline">Sign Up</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="section testimonials-section">
+    <div class="section-header reveal">
+      <p class="section-tag">What They Say</p>
+      <h2 class="section-title">Customer <span class="gold">Reviews</span></h2>
+    </div>
+    <div class="swiper testimonial-swiper reveal">
+      <div class="swiper-wrapper">
+        <div class="swiper-slide">
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <p class="review-text">"Absolutely love the quality! Products exceeded my expectations. Fast delivery and premium packaging."</p>
+            <div class="reviewer"><div class="avatar">A</div><div><strong>Aarav Sharma</strong><span>Verified Buyer</span></div></div>
+          </div>
+        </div>
+        <div class="swiper-slide">
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <p class="review-text">"Best online shopping experience I've had. The dark theme website is so elegant and easy to navigate!"</p>
+            <div class="reviewer"><div class="avatar">P</div><div><strong>Priya Mehta</strong><span>Verified Buyer</span></div></div>
+          </div>
+        </div>
+        <div class="swiper-slide">
+          <div class="testimonial-card">
+            <div class="stars">★★★★☆</div>
+            <p class="review-text">"Great deals on tech products. The quick add to cart feature is super convenient. Will shop again!"</p>
+            <div class="reviewer"><div class="avatar">R</div><div><strong>Rahul Verma</strong><span>Verified Buyer</span></div></div>
+          </div>
+        </div>
+        <div class="swiper-slide">
+          <div class="testimonial-card">
+            <div class="stars">★★★★★</div>
+            <p class="review-text">"Premium products at affordable prices. Customer support was very helpful. Highly recommended!"</p>
+            <div class="reviewer"><div class="avatar">S</div><div><strong>Sneha Patel</strong><span>Verified Buyer</span></div></div>
+          </div>
+        </div>
+      </div>
+      <div class="swiper-pagination testimonial-pagination"></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <h2 class="logo">Glow Cart <span class="logo-star">✦</span></h2>
+        <p>Premium products. Luxury experience.<br>Delivered to your door.</p>
+        <div class="social-links">
+          <a href="#" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+          </a>
+          <a href="#" aria-label="Twitter">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+          </a>
+          <a href="#" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+          </a>
+        </div>
+      </div>
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <a href="/">Home</a>
+        <a href="#products">Products</a>
+        <a href="#categories">Categories</a>
+        <a href="#offers">Offers</a>
+      </div>
+      <div class="footer-links">
+        <h4>Account</h4>
+        <a href="/login/">Login</a>
+        <a href="/signup/">Sign Up</a>
+        <a href="/orders/">My Orders</a>
+        <a href="/cart/">Cart</a>
+      </div>
+      <div class="footer-newsletter">
+        <h4>Newsletter</h4>
+        <p>Get exclusive deals in your inbox.</p>
+        <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
+          <input type="email" placeholder="your@email.com" required>
+          <button type="submit">→</button>
+        </form>
+        <p class="newsletter-msg" id="newsletter-msg"></p>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2025 Glow Cart. All rights reserved.</p>
+      <p>Made with ✦ for premium shoppers</p>
+    </div>
+  </footer>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast">✓ Added to cart!</div>
+
+  <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+  <script>
+    // Cart
+    function getCart() { return JSON.parse(localStorage.getItem("cart")) || []; }
+    function updateCount() { document.getElementById("cart-count").innerText = getCart().length; }
+
+    function handleCart(btn) {
+      let cart = getCart();
+      cart.push({ name: btn.getAttribute("data-name"), price: btn.getAttribute("data-price") });
+      localStorage.setItem("cart", JSON.stringify(cart));
+      updateCount();
+      let t = document.getElementById("toast");
+      t.classList.add("show");
+      setTimeout(() => t.classList.remove("show"), 2500);
+      let orig = btn.innerText;
+      btn.innerText = "✓";
+      setTimeout(() => { btn.innerText = orig; }, 1500);
+    }
+
+    updateCount();
+    window.addEventListener("pageshow", updateCount);
+
+    // Sticky navbar blur
+    window.addEventListener("scroll", () => {
+      document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 60);
+    });
+
+    // Hamburger
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("nav-links").classList.toggle("open");
+    });
+
+    // Hero Swiper
+    new Swiper(".hero-swiper", {
+      loop: true,
+      autoplay: { delay: 5000, disableOnInteraction: false },
+      pagination: { el: ".hero-pagination", clickable: true },
+      navigation: { nextEl: ".hero-swiper .swiper-button-next", prevEl: ".hero-swiper .swiper-button-prev" },
+      effect: "fade",
+      fadeEffect: { crossFade: true },
+      speed: 800
+    });
+
+    // Testimonial Swiper
+    new Swiper(".testimonial-swiper", {
+      loop: true,
+      autoplay: { delay: 4000 },
+      pagination: { el: ".testimonial-pagination", clickable: true },
+      slidesPerView: 1,
+      spaceBetween: 24,
+      breakpoints: { 768: { slidesPerView: 2 }, 1100: { slidesPerView: 3 } }
+    });
+
+    // Scroll reveal
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); });
+    }, { threshold: 0.12 });
+    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+    // Newsletter
+    function subscribeNewsletter(e) {
+      e.preventDefault();
+      document.getElementById("newsletter-msg").innerText = "✓ Subscribed! Thank you.";
+      e.target.reset();
+    }
+  </script>
+</body>
+</html>
