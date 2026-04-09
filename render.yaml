@@ -21,4 +21,4 @@ services:
       - key: ADMIN_EMAIL
         value: glowcart0811@gmail.com
       - key: ADMIN_PASSWORD
-        value: GlowCart@2025
+        value: monitkagot@0811
