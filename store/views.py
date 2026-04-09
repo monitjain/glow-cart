@@ -1,4 +1,5 @@
 import json
+import logging
 from datetime import timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login
@@ -9,6 +10,9 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.utils import timezone
 from .models import Product, Order, SiteVisitor
+
+
+logger = logging.getLogger(__name__)
 
 
 # ── Email helper ──────────────────────────────────────────────
@@ -108,8 +112,9 @@ def send_order_email(order, recipient, event='confirmed', tracking_id=''):
             recipient_list=[recipient],
             fail_silently=False,
         )
-    except Exception:
-        pass  # Never crash the app due to email failure
+        logger.info('Email sent to %s for order #%s event=%s', recipient, order.id, event)
+    except Exception as e:
+        logger.error('Email failed for order #%s event=%s: %s', order.id, event, str(e))
 
 
 # ── Visitor tracking helper ───────────────────────────────────
