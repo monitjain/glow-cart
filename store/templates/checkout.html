@@ -8,42 +8,54 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
+    body { background: #0D1B2A; color: #e8e8e8; }
     .promo-row { display: flex; gap: 10px; }
     .promo-row input { flex: 1; }
-    .promo-btn { padding: 12px 18px; background: rgba(212,175,55,0.12); border: 1px solid var(--border); color: var(--gold); border-radius: 9px; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; transition: var(--transition); }
-    .promo-btn:hover { background: var(--gold); color: #0D1B2A; }
+    .promo-btn {
+      padding: 12px 18px; background: rgba(212,175,55,0.12);
+      border: 1px solid rgba(212,175,55,0.3); color: #D4AF37;
+      border-radius: 9px; font-family: 'Poppins', sans-serif;
+      font-size: 13px; font-weight: 600; cursor: pointer;
+      white-space: nowrap; transition: all 0.3s ease;
+    }
+    .promo-btn:hover { background: #D4AF37; color: #0D1B2A; }
     .promo-msg { font-size: 13px; margin-top: 8px; font-weight: 600; }
     .promo-success { color: #2ecc71; }
-    .promo-error   { color: #e74c3c; }
-    .summary-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; color: var(--text-muted); }
+    .promo-error { color: #e74c3c; }
+    .summary-row { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 10px; color: #9a9a9a; }
     .summary-row.discount { color: #2ecc71; }
-    .summary-row.shipping { color: var(--teal); }
-    .summary-divider { border: none; border-top: 1px solid var(--border); margin: 14px 0; }
-    .free-ship-note { font-size: 12px; color: var(--teal); margin-top: 6px; text-align: center; }
+    .summary-row.shipping { color: #4DB6AC; }
+    .summary-divider { border: none; border-top: 1px solid rgba(212,175,55,0.15); margin: 14px 0; }
+    .free-ship-note { font-size: 12px; color: #4DB6AC; margin-top: 6px; text-align: center; }
   </style>
 </head>
 <body>
-  <nav class="navbar scrolled">
+
+  <nav class="navbar scrolled" id="navbar">
     <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
-    <div class="nav-links">
+    <div class="nav-links" id="nav-links">
       <a href="/">Home</a>
-      <a href="/cart/" class="nav-cart">🛒</a>
+      <a href="/cart/" class="nav-cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:4px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        Cart
+      </a>
       <a href="/orders/">My Orders</a>
     </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
   </nav>
 
   <div id="page-content"></div>
 
   <script>
-    // ── Promo codes
     const PROMOS = {
-      'FLASH40':  { type: 'percent', value: 40,  label: '40% off (Flash Sale)' },
-      'NEW200':   { type: 'flat',    value: 200,  label: '\u20b9200 off (New User)' },
-      'WELCOME10':{ type: 'percent', value: 10,  label: '10% off (Welcome Offer)' },
+      'FLASH40':   { type: 'percent', value: 40,  label: '40% off (Flash Sale)' },
+      'NEW200':    { type: 'flat',    value: 200,  label: '₹200 off (New User)' },
+      'WELCOME10': { type: 'percent', value: 10,  label: '10% off (Welcome Offer)' },
     };
 
     const SHIPPING_CHARGE = 49;
     const FREE_SHIP_ABOVE = 999;
+    const IS_FIRST_ORDER  = {{ is_first_order|yesno:'true,false' }};
 
     let cart = JSON.parse(localStorage.getItem("cart")) || [];
     let appliedPromo = null;
@@ -57,14 +69,14 @@
       return Object.values(map);
     }
 
-    let items = buildCartMap();
+    let items    = buildCartMap();
     let subtotal = items.reduce((sum, i) => sum + i.price * i.qty, 0);
 
     if (items.length === 0) {
       document.getElementById("page-content").innerHTML = `
-        <div class="empty-cart" style="padding:120px 20px;">
+        <div class="empty-cart" style="padding:140px 20px;">
           <p>🛒 Your cart is empty.</p>
-          <a href="/">Go back and add items</a>
+          <a href="/" class="btn-gold" style="margin-top:16px;display:inline-block;">Continue Shopping</a>
         </div>`;
     } else {
       let summaryRows = items.map(i => `
@@ -74,6 +86,8 @@
           <span class="item-subtotal">₹${(i.price * i.qty).toFixed(2)}</span>
         </div>`).join("");
 
+      let initShipping = subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE;
+
       document.getElementById("page-content").innerHTML = `
         <div class="checkout-wrapper">
 
@@ -81,11 +95,11 @@
             <h3>Delivery Details</h3>
             <form method="POST" action="/checkout/" onsubmit="prepareSubmit()" autocomplete="off">
               <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
-              <input type="hidden" name="items" id="items-input">
-              <input type="hidden" name="total" id="total-input">
+              <input type="hidden" name="items"    id="items-input">
+              <input type="hidden" name="total"    id="total-input">
               <input type="hidden" name="discount" id="discount-input">
               <input type="hidden" name="shipping" id="shipping-input">
-              <input type="hidden" name="promo" id="promo-input">
+              <input type="hidden" name="promo"    id="promo-input">
 
               <div class="form-group">
                 <label>Full Name</label>
@@ -111,22 +125,20 @@
               </div>
               <div class="form-group">
                 <label>PIN Code</label>
-                <input type="text" name="pincode" placeholder="6-digit PIN code" pattern="[0-9]{6}" title="Enter a valid 6-digit PIN" autocomplete="off" required>
+                <input type="text" name="pincode" placeholder="6-digit PIN code" pattern="[0-9]{6}" autocomplete="off" required>
               </div>
               <div class="form-group">
                 <label>Phone Number</label>
-                <input type="tel" name="phone" placeholder="10-digit mobile number" pattern="[0-9]{10}" title="Enter a valid 10-digit number" autocomplete="off" required>
+                <input type="tel" name="phone" placeholder="10-digit mobile number" pattern="[0-9]{10}" autocomplete="off" required>
               </div>
-
               <div class="form-group">
                 <label>Promo Code</label>
                 <div class="promo-row">
-                  <input type="text" id="promo-code-input" placeholder="Enter promo code (e.g. FLASH40)" autocomplete="off" style="text-transform:uppercase;">
+                  <input type="text" id="promo-code-input" placeholder="e.g. FLASH40 / WELCOME10" autocomplete="off" style="text-transform:uppercase;">
                   <button type="button" class="promo-btn" onclick="applyPromo()">Apply</button>
                 </div>
                 <p class="promo-msg" id="promo-msg"></p>
               </div>
-
               <button type="submit" class="place-order-btn">Place Order →</button>
             </form>
           </div>
@@ -143,21 +155,21 @@
               <span id="discount-label">Discount</span>
               <span id="discount-val"></span>
             </div>
-            <div class="summary-row shipping" id="shipping-row">
+            <div class="summary-row shipping">
               <span>Shipping</span>
-              <span id="shipping-val">₹${subtotal >= FREE_SHIP_ABOVE ? '0 (Free)' : SHIPPING_CHARGE}</span>
+              <span id="shipping-val">${initShipping === 0 ? '₹0 (Free)' : '₹' + initShipping}</span>
             </div>
             <hr class="summary-divider">
             <div class="summary-total">
               <span>Total</span>
-              <span id="grand-total">₹${calcTotal(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE).toFixed(2)}</span>
+              <span id="grand-total">₹${(subtotal + initShipping).toFixed(2)}</span>
             </div>
-            <p class="free-ship-note" id="ship-note">${subtotal >= FREE_SHIP_ABOVE ? '✓ Free shipping applied!' : 'Free shipping on orders above ₹999'}</p>
+            <p class="free-ship-note" id="ship-note">${initShipping === 0 ? '✓ Free shipping applied!' : 'Free shipping on orders above ₹999'}</p>
           </div>
 
         </div>`;
 
-      updateHiddenFields(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE);
+      updateHiddenFields(0, initShipping);
     }
 
     function calcTotal(discount, shipping) {
@@ -169,22 +181,13 @@
       let msg  = document.getElementById("promo-msg");
 
       if (!code) { msg.className = "promo-msg promo-error"; msg.innerText = "Please enter a promo code."; return; }
-
       if (!PROMOS[code]) {
-        msg.className = "promo-msg promo-error";
-        msg.innerText = "Invalid promo code.";
-        appliedPromo = null;
-        updateSummary(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE);
-        return;
+        msg.className = "promo-msg promo-error"; msg.innerText = "Invalid promo code.";
+        appliedPromo = null; updateSummary(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE); return;
       }
-
-      // WELCOME10 only for first-time users
-      if (code === 'WELCOME10' && !{{ is_first_order|yesno:'true,false' }}) {
-        msg.className = "promo-msg promo-error";
-        msg.innerText = "WELCOME10 is only valid for first-time orders.";
-        appliedPromo = null;
-        updateSummary(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE);
-        return;
+      if (code === 'WELCOME10' && !IS_FIRST_ORDER) {
+        msg.className = "promo-msg promo-error"; msg.innerText = "WELCOME10 is only valid for first-time orders.";
+        appliedPromo = null; updateSummary(0, subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE); return;
       }
 
       appliedPromo = { code, ...PROMOS[code] };
@@ -193,25 +196,18 @@
 
       let discount = 0;
       let shipping = subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE;
-
-      if (appliedPromo.type === 'percent') {
-        discount = subtotal * (appliedPromo.value / 100);
-      } else if (appliedPromo.type === 'flat') {
-        discount = Math.min(appliedPromo.value, subtotal);
-      } else if (appliedPromo.type === 'shipping') {
-        shipping = 0;
-      }
-
+      if (appliedPromo.type === 'percent')  discount = subtotal * (appliedPromo.value / 100);
+      else if (appliedPromo.type === 'flat') discount = Math.min(appliedPromo.value, subtotal);
       updateSummary(discount, shipping);
     }
 
     function updateSummary(discount, shipping) {
-      let discountRow = document.getElementById("discount-row");
-      let discountVal = document.getElementById("discount-val");
+      let discountRow   = document.getElementById("discount-row");
+      let discountVal   = document.getElementById("discount-val");
       let discountLabel = document.getElementById("discount-label");
-      let shippingVal = document.getElementById("shipping-val");
-      let grandTotal  = document.getElementById("grand-total");
-      let shipNote    = document.getElementById("ship-note");
+      let shippingVal   = document.getElementById("shipping-val");
+      let grandTotal    = document.getElementById("grand-total");
+      let shipNote      = document.getElementById("ship-note");
 
       if (discount > 0) {
         discountRow.style.display = "flex";
@@ -220,12 +216,9 @@
       } else {
         discountRow.style.display = "none";
       }
-
       shippingVal.innerText = shipping === 0 ? "₹0 (Free)" : "₹" + shipping;
-      let total = calcTotal(discount, shipping);
-      grandTotal.innerText = "₹" + total.toFixed(2);
-      shipNote.innerText = shipping === 0 ? "✓ Free shipping applied!" : "Free shipping on orders above ₹999";
-
+      grandTotal.innerText  = "₹" + calcTotal(discount, shipping).toFixed(2);
+      shipNote.innerText    = shipping === 0 ? "✓ Free shipping applied!" : "Free shipping on orders above ₹999";
       updateHiddenFields(discount, shipping);
     }
 
@@ -239,6 +232,10 @@
     }
 
     function prepareSubmit() { localStorage.removeItem("cart"); }
+
+    document.getElementById("hamburger").addEventListener("click", () => {
+      document.getElementById("nav-links").classList.toggle("open");
+    });
   </script>
 </body>
 </html>
