@@ -1,16 +1,11 @@
 import json
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth import login, authenticate
+from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum
 from django.core.mail import send_mail
 from .models import Product, Order
-# from flask import Flask, render_template
-# app= Flask(__Glow_Cart__)
-# @app.route('/Glow_cart')
-# def home():
-#   return render_template('home.html')
 def home(request):
     products = Product.objects.all()
     return render(request, 'home.html', {'products': products})

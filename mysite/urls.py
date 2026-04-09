@@ -1,10 +1,10 @@
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
 from store import views
 from django.contrib.auth import views as auth_views
-
 from django.conf import settings
 from django.conf.urls.static import static
+from django.views.static import serve
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,13 +23,10 @@ urlpatterns = [
     path('dashboard/products/', views.manage_products, name='manage_products'),
     path('dashboard/products/<int:product_id>/delete/', views.delete_product, name='delete_product'),
     path('dashboard/customers/', views.manage_customers, name='manage_customers'),
+    # Always serve media files (works in both dev and production)
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]
 
-# For media and static files (always serve in dev)
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / 'store/static')
-
-# Serve media in production too (Render/whitenoise doesn't handle media)
-from django.views.static import serve
-from django.urls import re_path
-urlpatterns += [re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT})]
+# Serve static files in development only
+if settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.BASE_DIR / 'store/static')
