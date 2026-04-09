@@ -257,6 +257,32 @@
         </div>
       </div>
 
+      <!-- Live Visitors -->
+      <p class="dash-section-title">🟢 Live Visitors on Site</p>
+      <div class="dash-stat-card" style="margin-bottom:24px;max-width:320px;">
+        <div class="dash-icon dash-icon-teal">👁️</div>
+        <div>
+          <div class="dash-stat-val" id="live-count">{{ live_count }}</div>
+          <div class="dash-stat-label">Active right now (last 5 min)</div>
+        </div>
+      </div>
+      <div class="dash-table-card" style="margin-bottom:36px;">
+        <table class="dash-table" id="live-table">
+          <thead><tr><th>Page</th><th>Status</th><th>Last Seen</th></tr></thead>
+          <tbody>
+            {% for v in live_visitors %}
+            <tr>
+              <td>{{ v.page }}</td>
+              <td>{% if v.is_logged_in %}<span class="badge badge-confirmed">Logged In</span>{% else %}<span class="badge badge-pending">Guest</span>{% endif %}</td>
+              <td style="color:var(--text-muted);font-size:12px;">{{ v.last_seen|timesince }} ago</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);">No active visitors right now.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
       <!-- Recent Orders -->
       <p class="dash-section-title">Recent Orders</p>
       <div class="dash-table-card">
@@ -296,6 +322,29 @@
       document.getElementById("nav-links").classList.toggle("open");
     });
     document.getElementById("dash-date").innerText = new Date().toLocaleDateString('en-IN', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+
+    // Poll live visitors every 30 seconds
+    function refreshLiveVisitors() {
+      fetch('/dashboard/live/')
+        .then(r => r.json())
+        .then(data => {
+          document.getElementById('live-count').innerText = data.count;
+          let tbody = '';
+          if (data.visitors.length === 0) {
+            tbody = '<tr><td colspan="3" style="text-align:center;padding:24px;color:#9a9a9a;">No active visitors right now.</td></tr>';
+          } else {
+            data.visitors.forEach(v => {
+              let badge = v.is_logged_in
+                ? '<span class="badge badge-confirmed">Logged In</span>'
+                : '<span class="badge badge-pending">Guest</span>';
+              tbody += `<tr><td>${v.page}</td><td>${badge}</td><td style="color:#9a9a9a;font-size:12px;">${v.last_seen}</td></tr>`;
+            });
+          }
+          document.querySelector('#live-table tbody').innerHTML = tbody;
+        })
+        .catch(() => {});
+    }
+    setInterval(refreshLiveVisitors, 30000);
   </script>
 </body>
 </html>

@@ -1,33 +1,157 @@
 import json
+from datetime import timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum
 from django.core.mail import send_mail
-from .models import Product, Order
+from django.http import JsonResponse
+from django.utils import timezone
+from .models import Product, Order, SiteVisitor
+
+
+# ── Email helper ──────────────────────────────────────────────
+def send_order_email(order, recipient, event='confirmed', tracking_id=''):
+    """Send order status email. event: confirmed | pending | shipped | delivered"""
+
+    try:
+        parsed_items = json.loads(order.items)
+        item_lines = '\n'.join(
+            f"  • {i.get('name')} x{i.get('qty', 1)}  ₹{i.get('price')}"
+            for i in parsed_items
+        )
+    except (ValueError, TypeError):
+        item_lines = order.items
+
+    divider = '─' * 42
+
+    if event == 'confirmed':
+        subject = f"✅ Order Confirmed – Glow Cart (Order #{order.id})"
+        body = (
+            f"Dear {order.name},\n\n"
+            f"Thank you for shopping with Glow Cart! 🛍️\n"
+            f"Your order has been confirmed and is being processed.\n\n"
+            f"{'=' * 42}\n"
+            f"  ORDER #{order.id} — CONFIRMED\n"
+            f"{'=' * 42}\n"
+            f"{item_lines}\n"
+            f"{divider}\n"
+            f"  Total Payable : ₹{order.total}\n"
+            f"  Payment Mode  : Cash on Delivery (COD)\n"
+            f"{'=' * 42}\n\n"
+            f"  Delivery Address : {order.address}\n"
+            f"  Phone            : {order.phone}\n\n"
+            f"We will notify you once your order is shipped. 🚚\n\n"
+        )
+
+    elif event == 'pending':
+        subject = f"⏳ Order Received – Glow Cart (Order #{order.id})"
+        body = (
+            f"Dear {order.name},\n\n"
+            f"We have received your order and it is currently pending review.\n\n"
+            f"  Order ID : #{order.id}\n"
+            f"  Total    : ₹{order.total}\n"
+            f"  Status   : Pending\n\n"
+            f"You will receive another email once your order is confirmed.\n\n"
+        )
+
+    elif event == 'shipped':
+        subject = f"🚚 Your Order is Shipped – Glow Cart (Order #{order.id})"
+        xpressbees_url = f"https://www.xpressbees.com/shipment/tracking?awb={tracking_id}" if tracking_id else ""
+        tracking_section = (
+            f"\n  Courier Partner : Xpressbees\n"
+            f"  Tracking ID     : {tracking_id}\n"
+            f"  Track Here      : {xpressbees_url}\n"
+        ) if tracking_id else "\n  Tracking details will be updated shortly.\n"
+        body = (
+            f"Dear {order.name},\n\n"
+            f"Great news! Your order has been shipped. 🎉\n\n"
+            f"{'=' * 42}\n"
+            f"  ORDER #{order.id} — SHIPPED\n"
+            f"{'=' * 42}\n"
+            f"{item_lines}\n"
+            f"{divider}\n"
+            f"  Total : ₹{order.total}\n"
+            f"{'=' * 42}\n"
+            f"{tracking_section}\n"
+            f"  Delivery Address : {order.address}\n\n"
+            f"Expected delivery in 3–5 business days.\n\n"
+        )
+
+    elif event == 'delivered':
+        subject = f"🎉 Order Delivered – Glow Cart (Order #{order.id})"
+        body = (
+            f"Dear {order.name},\n\n"
+            f"Your order has been delivered successfully! 🎊\n\n"
+            f"  Order ID : #{order.id}\n"
+            f"  Total    : ₹{order.total}\n\n"
+            f"We hope you love your purchase!\n"
+            f"Please leave a review — it helps us grow. ⭐\n\n"
+        )
+    else:
+        return
+
+    footer = (
+        f"{divider}\n"
+        f"Thank you for shopping with Glow Cart\n"
+        f"✨ Where Trends Light Up Your Life ✨\n"
+        f"{divider}\n"
+        f"Support: glowcart0811@gmail.com\n"
+    )
+
+    try:
+        send_mail(
+            subject=subject,
+            message=body + footer,
+            from_email=None,
+            recipient_list=[recipient],
+            fail_silently=False,
+        )
+    except Exception:
+        pass  # Never crash the app due to email failure
+
+
+# ── Visitor tracking helper ───────────────────────────────────
+def track_visitor(request):
+    if not request.session.session_key:
+        request.session.create()
+    SiteVisitor.objects.update_or_create(
+        session_key=request.session.session_key,
+        defaults={
+            'page':         request.path,
+            'is_logged_in': request.user.is_authenticated,
+        }
+    )
+
+
+# ── Public views ──────────────────────────────────────────────
 def home(request):
+    track_visitor(request)
     products = Product.objects.all()
     return render(request, 'home.html', {'products': products})
 
 
 def cart(request):
+    track_visitor(request)
     return render(request, 'cart.html')
 
 
 def product_detail(request, id):
+    track_visitor(request)
     product = get_object_or_404(Product, id=id)
     return render(request, 'product.html', {'product': product})
 
 
 @login_required
 def checkout(request):
+    track_visitor(request)
     if request.method == 'POST':
-        name    = request.POST.get('name')
-        street  = request.POST.get('street', '').strip()
-        city    = request.POST.get('city', '').strip()
-        state   = request.POST.get('state', '').strip()
-        pincode = request.POST.get('pincode', '').strip()
+        name     = request.POST.get('name')
+        street   = request.POST.get('street', '').strip()
+        city     = request.POST.get('city', '').strip()
+        state    = request.POST.get('state', '').strip()
+        pincode  = request.POST.get('pincode', '').strip()
         address  = f"{street}, {city}, {state} - {pincode}"
         phone    = request.POST.get('phone')
         items    = request.POST.get('items')
@@ -50,56 +174,9 @@ def checkout(request):
             total=int(float(total))
         )
 
-        try:
-            parsed_items = json.loads(items)
-            item_lines = '\n'.join(
-                f"  - {i.get('name')} x{i.get('qty', 1)}  \u20b9{i.get('price')}"
-                for i in parsed_items
-            )
-        except (ValueError, TypeError):
-            item_lines = items
-
-        promo_line    = f"  Promo Code  : {promo}\n" if promo else ""
-        discount_line = f"  Discount    : -\u20b9{float(discount):.2f}\n" if float(discount) > 0 else ""
-        shipping_line = f"  Shipping    : \u20b9{float(shipping):.2f}\n" if float(shipping) > 0 else "  Shipping    : FREE \u2713\n"
-
-        email_body = (
-            f"Dear {name},\n\n"
-            f"Thank you for shopping with Glow Cart! \U0001f6cd\ufe0f\n"
-            f"Your order has been confirmed and is being processed.\n\n"
-            f"{'=' * 40}\n"
-            f"  ORDER DETAILS  (Order #{order.id})\n"
-            f"{'=' * 40}\n"
-            f"{item_lines}\n"
-            f"{'─' * 40}\n"
-            f"{promo_line}"
-            f"{discount_line}"
-            f"{shipping_line}"
-            f"  Total Payable : \u20b9{order.total}\n"
-            f"  Payment Mode  : Cash on Delivery (COD)\n"
-            f"{'=' * 40}\n\n"
-            f"  Delivery Address : {address}\n"
-            f"  Phone            : {phone}\n\n"
-            f"We will deliver your order soon. \U0001f69a\n\n"
-            f"{'─' * 40}\n"
-            f"Thank you for shopping with Glow Cart\n"
-            f"\u2728 Where Trends Light Up Your Life \u2728\n"
-            f"{'─' * 40}\n"
-            f"Support: glowcart0811@gmail.com\n"
-        )
-
-        recipient = request.user.email or request.POST.get('email', '')
+        recipient = request.user.email or email
         if recipient:
-            try:
-                send_mail(
-                    subject=f"Your Order is Confirmed \u2013 Glow Cart \u2726 (Order #{order.id})",
-                    message=email_body,
-                    from_email=None,
-                    recipient_list=[recipient],
-                    fail_silently=False,
-                )
-            except Exception:
-                pass  # Order is saved — email failure won't break checkout
+            send_order_email(order, recipient, event='confirmed')
 
         return redirect('/success/')
 
@@ -121,13 +198,10 @@ def signup(request):
 
         if not username or not password or not email:
             return render(request, 'signup.html', {'error': 'All fields are required.'})
-
         if password != password2:
             return render(request, 'signup.html', {'error': 'Passwords do not match.'})
-
         if User.objects.filter(username=username).exists():
             return render(request, 'signup.html', {'error': 'Username already taken.'})
-
         if User.objects.filter(email=email).exists():
             return render(request, 'signup.html', {'error': 'Email already registered.'})
 
@@ -148,29 +222,39 @@ def my_orders(request):
         except (ValueError, TypeError):
             items = []
         orders.append({
-            'id':      order.id,
-            'items':   items,
-            'address': order.address,
-            'phone':   order.phone,
-            'total':   order.total,
-            'status':  order.status,
+            'id':          order.id,
+            'items':       items,
+            'address':     order.address,
+            'phone':       order.phone,
+            'total':       order.total,
+            'status':      order.status,
+            'tracking_id': order.tracking_id,
         })
     return render(request, 'orders.html', {'orders': orders})
 
 
+# ── Admin views ───────────────────────────────────────────────
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
 def dashboard(request):
-    total_orders  = Order.objects.count()
-    total_revenue = Order.objects.aggregate(rev=Sum('total'))['rev'] or 0
-    total_users   = User.objects.count()
+    # Clean up stale visitors (inactive > 5 minutes)
+    cutoff = timezone.now() - timedelta(minutes=5)
+    SiteVisitor.objects.filter(last_seen__lt=cutoff).delete()
+
+    live_count    = SiteVisitor.objects.count()
+    live_visitors = SiteVisitor.objects.order_by('-last_seen')[:20]
+
+    total_orders   = Order.objects.count()
+    total_revenue  = Order.objects.aggregate(rev=Sum('total'))['rev'] or 0
+    total_users    = User.objects.count()
     total_products = Product.objects.count()
-    status_counts = {
+    status_counts  = {
         'Pending':   Order.objects.filter(status='Pending').count(),
         'Confirmed': Order.objects.filter(status='Confirmed').count(),
         'Shipped':   Order.objects.filter(status='Shipped').count(),
         'Delivered': Order.objects.filter(status='Delivered').count(),
     }
     latest_orders = Order.objects.select_related('user').order_by('-id')[:10]
+
     return render(request, 'dashboard.html', {
         'total_orders':   total_orders,
         'total_revenue':  total_revenue,
@@ -178,7 +262,20 @@ def dashboard(request):
         'total_products': total_products,
         'status_counts':  status_counts,
         'latest_orders':  latest_orders,
+        'live_count':     live_count,
+        'live_visitors':  live_visitors,
     })
+
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def live_visitors_api(request):
+    """JSON endpoint polled every 30s by dashboard JS."""
+    cutoff = timezone.now() - timedelta(minutes=5)
+    SiteVisitor.objects.filter(last_seen__lt=cutoff).delete()
+    visitors = list(SiteVisitor.objects.values('page', 'is_logged_in', 'last_seen'))
+    for v in visitors:
+        v['last_seen'] = v['last_seen'].strftime('%H:%M:%S')
+    return JsonResponse({'count': len(visitors), 'visitors': visitors})
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
@@ -191,10 +288,26 @@ def manage_orders(request):
 def update_order_status(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     if request.method == 'POST':
-        new_status = request.POST.get('status')
+        new_status  = request.POST.get('status')
+        tracking_id = request.POST.get('tracking_id', '').strip()
+
         if new_status in ['Pending', 'Confirmed', 'Shipped', 'Delivered']:
+            old_status  = order.status
             order.status = new_status
+            if tracking_id:
+                order.tracking_id = tracking_id
             order.save()
+
+            # Send email only when status actually changes
+            if new_status != old_status:
+                recipient = order.user.email if order.user else ''
+                if recipient:
+                    send_order_email(
+                        order, recipient,
+                        event=new_status.lower(),
+                        tracking_id=order.tracking_id
+                    )
+
     return redirect('manage_orders')
 
 

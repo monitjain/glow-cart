@@ -18,6 +18,7 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('orders/', views.my_orders, name='orders'),
     path('dashboard/', views.dashboard, name='dashboard'),
+    path('dashboard/live/', views.live_visitors_api, name='live_visitors_api'),
     path('dashboard/orders/', views.manage_orders, name='manage_orders'),
     path('dashboard/orders/<int:order_id>/status/', views.update_order_status, name='update_order_status'),
     path('dashboard/products/', views.manage_products, name='manage_products'),
