@@ -1,1 +1,1 @@
-web: python create_superuser.py && gunicorn mysite.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+web: gunicorn mysite.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
