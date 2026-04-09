@@ -104,5 +104,5 @@ EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 EMAIL_TIMEOUT = 10
 EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'glowcart0811@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'mghngcnbifulknpj')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'qlgraavwgxxbgyfd')
 DEFAULT_FROM_EMAIL = f'Glow Cart <{os.environ.get("EMAIL_HOST_USER", "glowcart0811@gmail.com")}>'
