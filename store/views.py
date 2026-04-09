@@ -95,13 +95,16 @@ def checkout(request):
 
         recipient = request.user.email or request.POST.get('email', '')
         if recipient:
-            send_mail(
-                subject=f"Your Order is Confirmed \u2013 Glow Cart \u2726 (Order #{order.id})",
-                message=email_body,
-                from_email=None,
-                recipient_list=[recipient],
-                fail_silently=False,
-            )
+            try:
+                send_mail(
+                    subject=f"Your Order is Confirmed \u2013 Glow Cart \u2726 (Order #{order.id})",
+                    message=email_body,
+                    from_email=None,
+                    recipient_list=[recipient],
+                    fail_silently=False,
+                )
+            except Exception:
+                pass  # Order is saved — email failure won't break checkout
 
         return redirect('/success/')
 
