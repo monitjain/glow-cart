@@ -1,17 +1,17 @@
-# Python
-__pycache__/
+# Django
 *.pyc
+__pycache__/
+db.sqlite3
+staticfiles/
+media/
+.env
+
+# Python
 *.pyo
 *.pyd
-
-# Django
-db.sqlite3
-media/
-staticfiles/
-
-# Environment
-.env
-*.env
+.Python
+.venv/
+venv/
 
 # OS
 .DS_Store
