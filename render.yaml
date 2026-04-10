@@ -3,8 +3,8 @@ services:
     name: glow-cart
     plan: free
     runtime: python
-    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput --clear --ignore=staticfiles
-    startCommand: python manage.py migrate --noinput && python manage.py create_admin && gunicorn mysite.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120
+    buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput --clear
+    startCommand: python manage.py migrate --noinput && python manage.py create_admin && gunicorn mysite.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120
     envVars:
       - key: DATABASE_URL
         value: postgresql://glowcart_db_user:G9Foib9SfAJtVvhQy9f6Vqx04rMN6iRq@dpg-d7c0c2l8nd3s73fiiih0-a/glowcart_db
