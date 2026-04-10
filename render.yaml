@@ -7,7 +7,7 @@ services:
     startCommand: gunicorn mysite.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload
     envVars:
       - key: DATABASE_URL
-        value: postgresql://glowcart_db_user:G9Foib9SfAJtVvhQy9f6Vqx04rMN6iRq@dpg-d7c0c2l8nd3s73fiiih0-a/glowcart_db
+        value: postgresql://glowcart_db_user:G9Foib9SfAJtVvhQy9f6Vqx04rMN6iRq@dpg-d7c0c2l8nd3s73fiiih0-a.oregon-postgres.render.com/glowcart_db
       - key: DEBUG
         value: "False"
       - key: SECRET_KEY
