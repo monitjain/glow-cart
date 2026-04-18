@@ -22,3 +22,5 @@ services:
         value: glowcart0811@gmail.com
       - key: ADMIN_PASSWORD
         value: monitkagot@0811
+      - key: CLOUDINARY_URL
+        value: YOUR_CLOUDINARY_URL

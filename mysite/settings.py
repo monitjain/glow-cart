@@ -25,6 +25,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'cloudinary_storage',
+    'cloudinary',
 ]
 
 MIDDLEWARE = [
@@ -64,9 +66,9 @@ if os.environ.get('DATABASE_URL'):
             default=os.environ.get('DATABASE_URL'),
             conn_max_age=600,
             ssl_require=True,
+            engine='django.db.backends.postgresql',
         )
     }
-    DATABASES['default']['ENGINE'] = 'django.db.backends.postgresql'
 else:
     DATABASES = {
         'default': {
@@ -91,11 +93,19 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'store' / 'static']
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'django.contrib.staticfiles.storage.StaticFilesStorage'
 
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+# Cloudinary — persistent image storage on Render
+if os.environ.get('CLOUDINARY_URL'):
+    import cloudinary
+    cloudinary.config(
+        cloudinary_url=os.environ.get('CLOUDINARY_URL')
+    )
+    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
