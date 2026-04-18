@@ -24,8 +24,8 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
     'cloudinary_storage',
+    'django.contrib.staticfiles',
     'cloudinary',
 ]
 
@@ -101,11 +101,10 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Cloudinary — persistent image storage on Render
 if os.environ.get('CLOUDINARY_URL'):
-    import cloudinary
-    cloudinary.config(
-        cloudinary_url=os.environ.get('CLOUDINARY_URL')
-    )
     DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
+    CLOUDINARY_STORAGE = {
+        'CLOUDINARY_URL': os.environ.get('CLOUDINARY_URL')
+    }
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
