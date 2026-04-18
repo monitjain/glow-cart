@@ -23,4 +23,4 @@ services:
       - key: ADMIN_PASSWORD
         value: monitkagot@0811
       - key: CLOUDINARY_URL
-        value: YOUR_CLOUDINARY_URL
+        value: cloudinary://811982224118176:-y5wv_64ms--L5PnsKxsdrlmafE@dkla4wg06
