@@ -9,7 +9,7 @@ services:
       - key: DATABASE_URL
         value: postgresql://glowcart_db_user:G9Foib9SfAJtVvhQy9f6Vqx04rMN6iRq@dpg-d7c0c2l8nd3s73fiiih0-a/glowcart_db
       - key: DEBUG
-        value: "False"
+        value: "True"
       - key: SECRET_KEY
         generateValue: true
       - key: EMAIL_HOST_USER
