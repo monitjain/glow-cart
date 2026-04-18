@@ -83,22 +83,13 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files — WhiteNoise serves them on Render
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_DIRS = [BASE_DIR / 'store' / 'static']
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
-
-# Cloudinary — only active on Render when CLOUDINARY_URL is set
-CLOUDINARY_URL = os.environ.get('CLOUDINARY_URL', '')
-if CLOUDINARY_URL:
-    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
-    DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
-    CLOUDINARY_STORAGE = {'CLOUDINARY_URL': CLOUDINARY_URL}
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
