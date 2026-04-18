@@ -24,10 +24,12 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'cloudinary_storage',
     'django.contrib.staticfiles',
     'cloudinary',
 ]
+
+if os.environ.get('CLOUDINARY_URL'):
+    INSTALLED_APPS.insert(INSTALLED_APPS.index('django.contrib.staticfiles'), 'cloudinary_storage')
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
