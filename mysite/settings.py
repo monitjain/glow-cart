@@ -28,7 +28,17 @@ INSTALLED_APPS = [
 ]
 
 if os.environ.get('CLOUDINARY_URL'):
-    INSTALLED_APPS += ['cloudinary_storage', 'cloudinary']
+    INSTALLED_APPS = [
+        'django.contrib.admin',
+        'store',
+        'django.contrib.auth',
+        'django.contrib.contenttypes',
+        'django.contrib.sessions',
+        'django.contrib.messages',
+        'cloudinary_storage',
+        'django.contrib.staticfiles',
+        'cloudinary',
+    ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
