@@ -204,6 +204,13 @@
           </div>
         </div>
         <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-red">🔄</div>
+          <div>
+            <div class="dash-stat-val">{{ pending_returns }}</div>
+            <div class="dash-stat-label">Pending Returns</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
           <div class="dash-icon dash-icon-green">✅</div>
           <div>
             <div class="dash-stat-val">{{ status_counts.Delivered }}</div>
@@ -229,6 +236,11 @@
           <div class="action-icon">👥</div>
           <div class="action-title">Manage Customers</div>
           <div class="action-sub">View customer details</div>
+        </a>
+        <a href="{% url 'manage_returns' %}" class="action-card">
+          <div class="action-icon">🔄</div>
+          <div class="action-title">Returns</div>
+          <div class="action-sub">{{ pending_returns }} pending request{{ pending_returns|pluralize }}</div>
         </a>
         <a href="/admin/" class="action-card">
           <div class="action-icon">⚙️</div>
@@ -282,6 +294,33 @@
             {% endfor %}
           </tbody>
         </table>
+      </div>
+
+      <!-- Pending Returns -->
+      <p class="dash-section-title">🔄 Pending Return Requests</p>
+      <div class="dash-table-card" style="margin-bottom:36px;">
+        {% if latest_returns %}
+        <table class="dash-table">
+          <thead>
+            <tr><th>#</th><th>Customer</th><th>Order</th><th>Type</th><th>Reason</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody>
+            {% for rr in latest_returns %}
+            <tr>
+              <td>#{{ rr.id }}</td>
+              <td>{{ rr.user.username }}</td>
+              <td>Order #{{ rr.order.id }}</td>
+              <td><span class="badge badge-pending">{{ rr.request_type }}</span></td>
+              <td style="color:var(--text-muted);max-width:180px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ rr.reason }}</td>
+              <td><span class="badge badge-{{ rr.status|lower }}">{{ rr.status }}</span></td>
+              <td><a href="{% url 'manage_returns' %}" style="color:var(--gold);font-size:13px;font-weight:600;">Manage →</a></td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p class="dash-no-orders">No return requests yet.</p>
+        {% endif %}
       </div>
 
       <!-- Recent Orders -->

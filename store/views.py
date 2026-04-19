@@ -258,17 +258,21 @@ def dashboard(request):
         'Shipped':   Order.objects.filter(status='Shipped').count(),
         'Delivered': Order.objects.filter(status='Delivered').count(),
     }
-    latest_orders = Order.objects.select_related('user').order_by('-id')[:10]
+    latest_orders   = Order.objects.select_related('user').order_by('-id')[:10]
+    pending_returns = ReturnRequest.objects.filter(status='Pending').count()
+    latest_returns  = ReturnRequest.objects.select_related('order', 'user').order_by('-created_at')[:5]
 
     return render(request, 'dashboard.html', {
-        'total_orders':   total_orders,
-        'total_revenue':  total_revenue,
-        'total_users':    total_users,
-        'total_products': total_products,
-        'status_counts':  status_counts,
-        'latest_orders':  latest_orders,
-        'live_count':     live_count,
-        'live_visitors':  live_visitors,
+        'total_orders':    total_orders,
+        'total_revenue':   total_revenue,
+        'total_users':     total_users,
+        'total_products':  total_products,
+        'status_counts':   status_counts,
+        'latest_orders':   latest_orders,
+        'live_count':      live_count,
+        'live_visitors':   live_visitors,
+        'pending_returns': pending_returns,
+        'latest_returns':  latest_returns,
     })
 
 
