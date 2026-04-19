@@ -1,0 +1,80 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rate Your Experience — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .review-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+    .review-box { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 44px 40px; max-width: 520px; width: 100%; text-align: center; }
+    .review-icon { font-size: 56px; margin-bottom: 16px; }
+    .review-box h2 { font-family: 'Playfair Display', serif; font-size: 26px; color: #fff; margin-bottom: 8px; }
+    .review-box p { font-size: 14px; color: var(--text-muted); margin-bottom: 28px; }
+    .stars-row { display: flex; justify-content: center; gap: 10px; margin-bottom: 24px; }
+    .star-btn { font-size: 36px; color: var(--border); cursor: pointer; transition: color 0.15s; background: none; border: none; padding: 0; line-height: 1; }
+    .star-btn.active { color: var(--gold); }
+    textarea { width: 100%; padding: 14px 16px; background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 14px; color: var(--text); resize: vertical; min-height: 110px; margin-bottom: 20px; outline: none; transition: border 0.2s; }
+    textarea:focus { border-color: var(--gold); }
+    .skip-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; margin-top: 14px; text-decoration: underline; font-family: 'Poppins', sans-serif; }
+    .skip-btn:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+  <div class="review-page">
+    <div class="review-box">
+      <div class="review-icon">🎉</div>
+      <h2>Order Placed Successfully!</h2>
+      <p>How was your shopping experience?<br>Your feedback helps us improve.</p>
+
+      <form method="POST" id="review-form">
+        {% csrf_token %}
+        <input type="hidden" name="rating" id="rating-input" value="5">
+
+        <div class="stars-row" id="stars">
+          <button type="button" class="star-btn active" data-val="1">★</button>
+          <button type="button" class="star-btn active" data-val="2">★</button>
+          <button type="button" class="star-btn active" data-val="3">★</button>
+          <button type="button" class="star-btn active" data-val="4">★</button>
+          <button type="button" class="star-btn active" data-val="5">★</button>
+        </div>
+
+        <textarea name="comment" placeholder="Tell us about your experience... (optional)" id="review-comment"></textarea>
+
+        <button type="submit" class="btn-gold" style="width:100%;font-size:15px;">Submit Review →</button>
+      </form>
+
+      <form method="POST" id="skip-form">
+        {% csrf_token %}
+        <input type="hidden" name="skip" value="1">
+        <input type="hidden" name="rating" value="5">
+        <input type="hidden" name="comment" value="">
+        <button type="submit" class="skip-btn">Skip for now</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const stars = document.querySelectorAll('.star-btn');
+    const ratingInput = document.getElementById('rating-input');
+    let selected = 5;
+
+    stars.forEach(btn => {
+      btn.addEventListener('mouseover', () => {
+        const val = parseInt(btn.dataset.val);
+        stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= val));
+      });
+      btn.addEventListener('mouseout', () => {
+        stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= selected));
+      });
+      btn.addEventListener('click', () => {
+        selected = parseInt(btn.dataset.val);
+        ratingInput.value = selected;
+        stars.forEach(s => s.classList.toggle('active', parseInt(s.dataset.val) <= selected));
+      });
+    });
+  </script>
+</body>
+</html>

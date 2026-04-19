@@ -183,7 +183,7 @@ def checkout(request):
         if recipient:
             send_order_email(order, recipient, event='confirmed')
 
-        return redirect('/success/')
+        return redirect('/review/order/')
 
     return render(request, 'checkout.html', {
         'is_first_order': not Order.objects.filter(user=request.user).exists()
@@ -459,6 +459,21 @@ def send_return_email(rr, recipient, event='submitted'):
 
 
 # ── Reviews ──────────────────────────────────────────────────
+@login_required
+def order_review(request):
+    if request.method == 'POST':
+        rating  = int(request.POST.get('rating', 5))
+        comment = request.POST.get('comment', '').strip()
+        skip    = request.POST.get('skip', '')
+        if not skip and comment and 1 <= rating <= 5:
+            Review.objects.create(
+                user=request.user, rating=rating,
+                comment=comment, is_visible=True
+            )
+        return redirect('/success/')
+    return render(request, 'order_review.html')
+
+
 @login_required
 def submit_review(request):
     if request.method == 'POST':
