@@ -56,8 +56,18 @@
         <div class="delivery-info">
           <span>📍 {{ order.address }}</span>
           <span>📞 {{ order.phone }}</span>
+          {% if order.tracking_id %}
+          <span>🚚 Tracking: <a href="https://www.xpressbees.com/shipment/tracking?awb={{ order.tracking_id }}" target="_blank" style="color:var(--teal);">{{ order.tracking_id }}</a></span>
+          {% endif %}
         </div>
-        <div class="order-total">₹{{ order.total }}</div>
+        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px;">
+          <div class="order-total">₹{{ order.total }}</div>
+          {% if order.status == 'Delivered' %}
+          <a href="/orders/return/{{ order.id }}/" style="padding:8px 18px;background:rgba(212,175,55,0.12);border:1px solid var(--border);color:var(--gold);border-radius:20px;font-size:13px;font-weight:600;transition:var(--transition);">
+            🔄 Return / Exchange
+          </a>
+          {% endif %}
+        </div>
       </div>
     </div>
     {% empty %}

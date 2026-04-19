@@ -24,6 +24,11 @@ urlpatterns = [
     path('dashboard/products/', views.manage_products, name='manage_products'),
     path('dashboard/products/<int:product_id>/delete/', views.delete_product, name='delete_product'),
     path('dashboard/customers/', views.manage_customers, name='manage_customers'),
+    path('orders/return/<int:order_id>/', views.submit_return_request, name='submit_return_request'),
+    path('dashboard/returns/', views.manage_returns, name='manage_returns'),
+    path('dashboard/returns/<int:rr_id>/status/', views.update_return_status, name='update_return_status'),
+    path('review/submit/', views.submit_review, name='submit_review'),
+    path('api/reviews/', views.reviews_api, name='reviews_api'),
     # Always serve media files (works in both dev and production)
     re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
 ]

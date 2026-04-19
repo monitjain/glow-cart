@@ -1,6 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+
 class Product(models.Model):
     name        = models.CharField(max_length=100)
     price       = models.IntegerField()
@@ -29,6 +30,41 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order #{self.id} — {self.name}"
+
+
+class ReturnRequest(models.Model):
+    TYPE_CHOICES = [
+        ('Return',   'Return'),
+        ('Exchange', 'Exchange'),
+        ('Replace',  'Replace'),
+    ]
+    STATUS_CHOICES = [
+        ('Pending',   'Pending'),
+        ('Approved',  'Approved'),
+        ('Rejected',  'Rejected'),
+        ('Completed', 'Completed'),
+    ]
+    order       = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='return_requests')
+    user        = models.ForeignKey(User, on_delete=models.CASCADE)
+    request_type = models.CharField(max_length=10, choices=TYPE_CHOICES)
+    reason      = models.TextField()
+    status      = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
+    created_at  = models.DateTimeField(auto_now_add=True)
+    admin_note  = models.TextField(blank=True, default='')
+
+    def __str__(self):
+        return f"{self.request_type} for Order #{self.order.id} — {self.status}"
+
+
+class Review(models.Model):
+    user       = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating     = models.IntegerField(default=5)  # 1-5
+    comment    = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_visible = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.user.username} — {self.rating}★"
 
 
 class SiteVisitor(models.Model):

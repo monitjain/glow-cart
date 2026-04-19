@@ -1,0 +1,103 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manage Returns — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .dash-layout{display:flex;min-height:100vh;padding-top:64px}
+    .dash-sidebar{width:240px;flex-shrink:0;background:#080f18;border-right:1px solid var(--border);padding:32px 0;position:fixed;top:64px;left:0;bottom:0;overflow-y:auto}
+    .sidebar-label{font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;padding:0 24px;margin:24px 0 8px}
+    .sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 24px;font-size:14px;font-weight:500;color:var(--text-muted);transition:var(--transition);border-left:3px solid transparent}
+    .sidebar-link:hover,.sidebar-link.active{color:var(--gold);background:rgba(212,175,55,0.07);border-left-color:var(--gold)}
+    .dash-main{margin-left:240px;flex:1;padding:36px 40px 60px}
+    .dash-table-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
+    .dash-table{width:100%;border-collapse:collapse;font-size:14px;min-width:700px}
+    .dash-table thead th{background:rgba(255,255,255,0.03);padding:14px 18px;text-align:left;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border)}
+    .dash-table tbody td{padding:12px 18px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:top}
+    .dash-table tbody tr:hover{background:rgba(255,255,255,0.02)}
+    .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600}
+    .badge-pending{background:rgba(212,175,55,0.15);color:var(--gold);border:1px solid rgba(212,175,55,0.3)}
+    .badge-approved{background:rgba(77,182,172,0.15);color:var(--teal);border:1px solid rgba(77,182,172,0.3)}
+    .badge-rejected{background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3)}
+    .badge-completed{background:rgba(46,204,113,0.15);color:#2ecc71;border:1px solid rgba(46,204,113,0.3)}
+    select,textarea{background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'Poppins',sans-serif;font-size:13px;padding:6px 10px}
+    .update-btn{padding:7px 16px;background:linear-gradient(135deg,var(--gold),#c9a227);color:#0D1B2A;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
+    @media(max-width:900px){.dash-sidebar{display:none}.dash-main{margin-left:0;padding:20px 16px 40px}}
+  </style>
+</head>
+<body>
+  <nav class="navbar scrolled" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links">
+      <a href="/dashboard/">📊 Dashboard</a>
+      <form method="POST" action="/logout/" style="display:inline;">{% csrf_token %}
+        <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+      </form>
+    </div>
+  </nav>
+
+  <div class="dash-layout">
+    <aside class="dash-sidebar">
+      <div class="sidebar-label">Overview</div>
+      <a href="/dashboard/" class="sidebar-link"><span>📊</span> Dashboard</a>
+      <div class="sidebar-label">Manage</div>
+      <a href="/dashboard/orders/" class="sidebar-link"><span>📦</span> All Orders</a>
+      <a href="/dashboard/products/" class="sidebar-link"><span>🛍️</span> Products</a>
+      <a href="/dashboard/customers/" class="sidebar-link"><span>👥</span> Customers</a>
+      <a href="/dashboard/returns/" class="sidebar-link active"><span>🔄</span> Returns</a>
+      <div class="sidebar-label">System</div>
+      <a href="/admin/" class="sidebar-link"><span>⚙️</span> Django Admin</a>
+    </aside>
+
+    <main class="dash-main">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;">
+        <div>
+          <h2 style="font-family:'Playfair Display',serif;font-size:26px;color:#fff;">🔄 Return Requests</h2>
+          <p style="font-size:13px;color:var(--text-muted);">{{ requests|length }} total request{{ requests|length|pluralize }}</p>
+        </div>
+      </div>
+
+      <div class="dash-table-card">
+        {% if requests %}
+        <table class="dash-table">
+          <thead>
+            <tr><th>#</th><th>Customer</th><th>Order</th><th>Type</th><th>Reason</th><th>Status</th><th>Update</th></tr>
+          </thead>
+          <tbody>
+            {% for rr in requests %}
+            <tr>
+              <td>#{{ rr.id }}</td>
+              <td>{{ rr.user.username }}<br><span style="font-size:12px;color:var(--text-muted);">{{ rr.user.email }}</span></td>
+              <td>Order #{{ rr.order.id }}<br><span style="color:var(--gold);font-weight:600;">₹{{ rr.order.total }}</span></td>
+              <td><span class="badge badge-pending">{{ rr.request_type }}</span></td>
+              <td style="max-width:200px;color:var(--text-muted);font-size:13px;">{{ rr.reason }}</td>
+              <td><span class="badge badge-{{ rr.status|lower }}">{{ rr.status }}</span></td>
+              <td>
+                <form method="POST" action="{% url 'update_return_status' rr.id %}">
+                  {% csrf_token %}
+                  <select name="status" style="margin-bottom:6px;width:100%;">
+                    <option value="Pending" {% if rr.status == 'Pending' %}selected{% endif %}>Pending</option>
+                    <option value="Approved" {% if rr.status == 'Approved' %}selected{% endif %}>Approved</option>
+                    <option value="Rejected" {% if rr.status == 'Rejected' %}selected{% endif %}>Rejected</option>
+                    <option value="Completed" {% if rr.status == 'Completed' %}selected{% endif %}>Completed</option>
+                  </select>
+                  <textarea name="admin_note" placeholder="Note to customer..." style="width:100%;margin-bottom:6px;min-height:60px;">{{ rr.admin_note }}</textarea>
+                  <button type="submit" class="update-btn">Update →</button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% else %}
+        <p style="text-align:center;padding:48px;color:var(--text-muted);">No return requests yet.</p>
+        {% endif %}
+      </div>
+    </main>
+  </div>
+</body>
+</html>

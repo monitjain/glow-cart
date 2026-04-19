@@ -9,7 +9,7 @@ from django.db.models import Sum
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.utils import timezone
-from .models import Product, Order, SiteVisitor
+from .models import Product, Order, SiteVisitor, ReturnRequest, Review
 
 
 logger = logging.getLogger(__name__)
@@ -343,3 +343,129 @@ def manage_customers(request):
             'total_spent': Order.objects.filter(user=c).aggregate(t=Sum('total'))['t'] or 0,
         })
     return render(request, 'manage_customers.html', {'customers': customer_data})
+
+
+# ── Return / Exchange / Replace ─────────────────────────────────
+@login_required
+def submit_return_request(request, order_id):
+    order = get_object_or_404(Order, id=order_id, user=request.user)
+    if order.status != 'Delivered':
+        return redirect('orders')
+    if request.method == 'POST':
+        request_type = request.POST.get('request_type')
+        reason       = request.POST.get('reason', '').strip()
+        if request_type in ['Return', 'Exchange', 'Replace'] and reason:
+            rr = ReturnRequest.objects.create(
+                order=order, user=request.user,
+                request_type=request_type, reason=reason
+            )
+            recipient = request.user.email
+            if recipient:
+                send_return_email(rr, recipient, event='submitted')
+            return redirect('orders')
+    return render(request, 'return_request.html', {'order': order})
+
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def manage_returns(request):
+    requests = ReturnRequest.objects.select_related('order', 'user').order_by('-created_at')
+    return render(request, 'manage_returns.html', {'requests': requests})
+
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def update_return_status(request, rr_id):
+    rr = get_object_or_404(ReturnRequest, id=rr_id)
+    if request.method == 'POST':
+        new_status = request.POST.get('status')
+        admin_note = request.POST.get('admin_note', '').strip()
+        if new_status in ['Pending', 'Approved', 'Rejected', 'Completed']:
+            old_status    = rr.status
+            rr.status     = new_status
+            rr.admin_note = admin_note
+            rr.save()
+            if new_status != old_status:
+                recipient = rr.user.email
+                if recipient:
+                    send_return_email(rr, recipient, event=new_status.lower())
+    return redirect('manage_returns')
+
+
+def send_return_email(rr, recipient, event='submitted'):
+    divider = '─' * 42
+    type_label = rr.request_type
+    if event == 'submitted':
+        subject = f"🔄 {type_label} Request Received – Glow Cart (Order #{rr.order.id})"
+        body = (
+            f"Dear {rr.user.username},\n\n"
+            f"We have received your {type_label} request for Order #{rr.order.id}.\n\n"
+            f"  Request Type : {type_label}\n"
+            f"  Reason       : {rr.reason}\n"
+            f"  Status       : Pending Review\n\n"
+            f"Our team will review your request within 24-48 hours.\n\n"
+        )
+    elif event == 'approved':
+        subject = f"✅ {type_label} Request Approved – Glow Cart (Order #{rr.order.id})"
+        body = (
+            f"Dear {rr.user.username},\n\n"
+            f"Great news! Your {type_label} request has been APPROVED. 🎉\n\n"
+            f"  Order ID     : #{rr.order.id}\n"
+            f"  Request Type : {type_label}\n"
+            f"  Note         : {rr.admin_note or 'Our team will contact you shortly.'}\n\n"
+            f"Please wait for further instructions from our team.\n\n"
+        )
+    elif event == 'rejected':
+        subject = f"❌ {type_label} Request Update – Glow Cart (Order #{rr.order.id})"
+        body = (
+            f"Dear {rr.user.username},\n\n"
+            f"We regret to inform you that your {type_label} request could not be approved.\n\n"
+            f"  Order ID : #{rr.order.id}\n"
+            f"  Reason   : {rr.admin_note or 'Does not meet return policy criteria.'}\n\n"
+            f"For queries, contact us at glowcart0811@gmail.com\n\n"
+        )
+    elif event == 'completed':
+        subject = f"🎉 {type_label} Completed – Glow Cart (Order #{rr.order.id})"
+        body = (
+            f"Dear {rr.user.username},\n\n"
+            f"Your {type_label} request has been completed successfully!\n\n"
+            f"  Order ID : #{rr.order.id}\n"
+            f"  Note     : {rr.admin_note or 'Process completed.'}\n\n"
+            f"Thank you for your patience.\n\n"
+        )
+    else:
+        return
+    footer = (
+        f"{divider}\n"
+        f"Glow Cart ✨ Where Trends Light Up Your Life\n"
+        f"Support: glowcart0811@gmail.com\n"
+    )
+    try:
+        send_mail(subject=subject, message=body + footer,
+                  from_email=None, recipient_list=[recipient], fail_silently=False)
+        logger.info('Return email sent to %s event=%s', recipient, event)
+    except Exception as e:
+        logger.error('Return email failed: %s', str(e))
+
+
+# ── Reviews ──────────────────────────────────────────────────
+@login_required
+def submit_review(request):
+    if request.method == 'POST':
+        rating  = int(request.POST.get('rating', 5))
+        comment = request.POST.get('comment', '').strip()
+        if comment and 1 <= rating <= 5:
+            Review.objects.update_or_create(
+                user=request.user,
+                defaults={'rating': rating, 'comment': comment, 'is_visible': True}
+            )
+    return redirect('/')
+
+
+def reviews_api(request):
+    reviews = Review.objects.filter(is_visible=True).select_related('user').order_by('-created_at')[:10]
+    data = [{
+        'username': r.user.username,
+        'rating':   r.rating,
+        'comment':  r.comment,
+        'date':     r.created_at.strftime('%d %b %Y'),
+    } for r in reviews]
+    return JsonResponse({'reviews': data})

@@ -1,0 +1,45 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Return / Exchange — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+  <nav class="navbar scrolled">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/orders/">My Orders</a>
+    </div>
+  </nav>
+
+  <div class="auth-wrapper" style="max-width:560px;">
+    <div class="auth-card">
+      <h2 style="text-align:center;margin-bottom:6px;">🔄 Return / Exchange</h2>
+      <p class="auth-sub">Order #{{ order.id }} — ₹{{ order.total }}</p>
+
+      <form method="POST">
+        {% csrf_token %}
+        <div class="form-group">
+          <label>Request Type</label>
+          <select name="request_type" required style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);">
+            <option value="Return">Return — I want to return the product</option>
+            <option value="Exchange">Exchange — I want a different product</option>
+            <option value="Replace">Replace — Product is damaged/defective</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Reason</label>
+          <textarea name="reason" placeholder="Please describe the issue in detail..." required style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);resize:vertical;min-height:120px;"></textarea>
+        </div>
+        <button type="submit" class="auth-btn">Submit Request →</button>
+      </form>
+      <div class="auth-footer"><a href="/orders/">← Back to My Orders</a></div>
+    </div>
+  </div>
+</body>
+</html>
