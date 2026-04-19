@@ -1,0 +1,192 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Dashboard — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .ud-layout { max-width: 1100px; margin: 90px auto 60px; padding: 0 24px; }
+    .ud-header { display: flex; align-items: center; gap: 20px; margin-bottom: 36px; flex-wrap: wrap; }
+    .ud-avatar { width: 72px; height: 72px; border-radius: 50%; background: linear-gradient(135deg, var(--gold), var(--teal)); display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 700; color: #0D1B2A; flex-shrink: 0; }
+    .ud-name { font-family: 'Playfair Display', serif; font-size: 26px; color: #fff; }
+    .ud-email { font-size: 13px; color: var(--text-muted); margin-top: 4px; }
+    .ud-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 36px; }
+    .ud-stat { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 22px; display: flex; align-items: center; gap: 14px; transition: var(--transition); }
+    .ud-stat:hover { transform: translateY(-3px); border-color: rgba(212,175,55,0.4); }
+    .ud-stat-icon { font-size: 28px; }
+    .ud-stat-val { font-family: 'Playfair Display', serif; font-size: 24px; font-weight: 700; color: var(--gold); }
+    .ud-stat-label { font-size: 12px; color: var(--text-muted); }
+    .ud-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+    .ud-tab { padding: 9px 22px; border-radius: 30px; font-size: 14px; font-weight: 600; cursor: pointer; border: 1px solid var(--border); color: var(--text-muted); background: none; transition: var(--transition); }
+    .ud-tab.active, .ud-tab:hover { background: var(--gold); color: #0D1B2A; border-color: var(--gold); }
+    .ud-panel { display: none; }
+    .ud-panel.active { display: block; }
+    .ud-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px 24px; margin-bottom: 16px; transition: var(--transition); }
+    .ud-card:hover { border-color: rgba(212,175,55,0.3); }
+    .ud-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .ud-card-title { font-weight: 700; font-size: 15px; color: var(--text); }
+    .ud-card-sub { font-size: 13px; color: var(--text-muted); margin-top: 3px; }
+    .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+    .badge-pending   { background: rgba(212,175,55,0.15); color: var(--gold);   border: 1px solid rgba(212,175,55,0.3); }
+    .badge-confirmed { background: rgba(77,182,172,0.15);  color: var(--teal);  border: 1px solid rgba(77,182,172,0.3); }
+    .badge-shipped   { background: rgba(100,149,237,0.15); color: #6495ed;      border: 1px solid rgba(100,149,237,0.3); }
+    .badge-delivered { background: rgba(46,204,113,0.15);  color: #2ecc71;      border: 1px solid rgba(46,204,113,0.3); }
+    .badge-approved  { background: rgba(77,182,172,0.15);  color: var(--teal);  border: 1px solid rgba(77,182,172,0.3); }
+    .badge-rejected  { background: rgba(231,76,60,0.15);   color: #e74c3c;      border: 1px solid rgba(231,76,60,0.3); }
+    .badge-completed { background: rgba(46,204,113,0.15);  color: #2ecc71;      border: 1px solid rgba(46,204,113,0.3); }
+    .badge-return    { background: rgba(231,76,60,0.12);   color: #e74c3c;      border: 1px solid rgba(231,76,60,0.2); }
+    .badge-exchange  { background: rgba(100,149,237,0.12); color: #6495ed;      border: 1px solid rgba(100,149,237,0.2); }
+    .badge-replace   { background: rgba(212,175,55,0.12);  color: var(--gold);  border: 1px solid rgba(212,175,55,0.2); }
+    .items-mini { font-size: 13px; color: var(--text-muted); margin-bottom: 10px; }
+    .items-mini span { color: var(--text); }
+    .stars-sm { color: var(--gold); font-size: 14px; letter-spacing: 1px; }
+    .empty-state { text-align: center; padding: 48px 20px; color: var(--text-muted); }
+    .empty-state a { color: var(--gold); font-weight: 600; }
+    @media(max-width:600px) { .ud-layout { margin-top: 76px; } .ud-tabs { gap: 6px; } .ud-tab { padding: 7px 14px; font-size: 13px; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar scrolled" id="navbar">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links" id="nav-links">
+      <a href="/">Home</a>
+      <a href="/cart/" class="nav-cart">🛒</a>
+      <a href="/my-dashboard/">My Dashboard</a>
+      <a href="/orders/">My Orders</a>
+      {% if user.is_staff %}<a href="/dashboard/">Admin</a>{% endif %}
+      <form method="POST" action="/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+      </form>
+    </div>
+    <button class="hamburger" id="hamburger">&#9776;</button>
+  </nav>
+
+  <div class="ud-layout">
+
+    <!-- Header -->
+    <div class="ud-header">
+      <div class="ud-avatar">{{ user.username|first|upper }}</div>
+      <div>
+        <div class="ud-name">{{ user.username }}</div>
+        <div class="ud-email">{{ user.email }}</div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px;">Member since {{ user.date_joined|date:"d M Y" }}</div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="ud-stats">
+      <div class="ud-stat">
+        <div class="ud-stat-icon">📦</div>
+        <div><div class="ud-stat-val">{{ total_orders }}</div><div class="ud-stat-label">Total Orders</div></div>
+      </div>
+      <div class="ud-stat">
+        <div class="ud-stat-icon">💰</div>
+        <div><div class="ud-stat-val">₹{{ total_spent }}</div><div class="ud-stat-label">Total Spent</div></div>
+      </div>
+      <div class="ud-stat">
+        <div class="ud-stat-icon">🔄</div>
+        <div><div class="ud-stat-val">{{ return_requests|length }}</div><div class="ud-stat-label">Return Requests</div></div>
+      </div>
+      <div class="ud-stat">
+        <div class="ud-stat-icon">⭐</div>
+        <div><div class="ud-stat-val">{{ reviews|length }}</div><div class="ud-stat-label">Reviews Given</div></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="ud-tabs">
+      <button class="ud-tab active" onclick="showTab('orders', this)">📦 My Orders</button>
+      <button class="ud-tab" onclick="showTab('returns', this)">🔄 Returns & Exchanges</button>
+      <button class="ud-tab" onclick="showTab('reviews', this)">⭐ My Reviews</button>
+    </div>
+
+    <!-- Orders Panel -->
+    <div class="ud-panel active" id="panel-orders">
+      {% for order in orders %}
+      <div class="ud-card">
+        <div class="ud-card-header">
+          <div>
+            <div class="ud-card-title">Order #{{ order.id }}</div>
+            <div class="ud-card-sub">₹{{ order.total }} · {{ order.address|truncatechars:40 }}</div>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <span class="badge badge-{{ order.status|lower }}">{{ order.status }}</span>
+            {% if order.status == 'Delivered' %}
+            <a href="/orders/return/{{ order.id }}/" style="padding:6px 14px;background:rgba(212,175,55,0.1);border:1px solid var(--border);color:var(--gold);border-radius:20px;font-size:12px;font-weight:600;">🔄 Return/Exchange</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="items-mini">
+          {% for item in order.items %}<span>{{ item.name }} x{{ item.qty }}</span>{% if not forloop.last %} · {% endif %}{% empty %}—{% endfor %}
+        </div>
+        {% if order.tracking_id %}
+        <div style="font-size:13px;color:var(--text-muted);">🚚 Tracking: <a href="https://www.xpressbees.com/shipment/tracking?awb={{ order.tracking_id }}" target="_blank" style="color:var(--teal);">{{ order.tracking_id }}</a></div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state"><p>No orders yet.</p><a href="/">Start Shopping →</a></div>
+      {% endfor %}
+    </div>
+
+    <!-- Returns Panel -->
+    <div class="ud-panel" id="panel-returns">
+      {% for rr in return_requests %}
+      <div class="ud-card">
+        <div class="ud-card-header">
+          <div>
+            <div class="ud-card-title">{{ rr.request_type }} Request — Order #{{ rr.order.id }}</div>
+            <div class="ud-card-sub">{{ rr.created_at|date:"d M Y" }} · ₹{{ rr.order.total }}</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="badge badge-{{ rr.request_type|lower }}">{{ rr.request_type }}</span>
+            <span class="badge badge-{{ rr.status|lower }}">{{ rr.status }}</span>
+          </div>
+        </div>
+        <div style="font-size:13px;color:var(--text-muted);margin-bottom:8px;">Reason: <span style="color:var(--text);">{{ rr.reason }}</span></div>
+        {% if rr.admin_note %}
+        <div style="font-size:13px;padding:10px 14px;background:rgba(212,175,55,0.07);border-radius:8px;border-left:3px solid var(--gold);">
+          <strong style="color:var(--gold);">Admin Note:</strong> <span style="color:var(--text);">{{ rr.admin_note }}</span>
+        </div>
+        {% endif %}
+      </div>
+      {% empty %}
+      <div class="empty-state"><p>No return requests yet.</p><a href="/orders/">View Orders →</a></div>
+      {% endfor %}
+    </div>
+
+    <!-- Reviews Panel -->
+    <div class="ud-panel" id="panel-reviews">
+      {% for review in reviews %}
+      <div class="ud-card">
+        <div class="ud-card-header">
+          <div>
+            <div class="stars-sm">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}☆{% endif %}{% endfor %}</div>
+            <div class="ud-card-sub">{{ review.created_at|date:"d M Y" }}</div>
+          </div>
+        </div>
+        <p style="font-size:14px;color:var(--text);font-style:italic;">"{{ review.comment }}"</p>
+      </div>
+      {% empty %}
+      <div class="empty-state"><p>You haven't written any reviews yet.</p><a href="/">Shop & Review →</a></div>
+      {% endfor %}
+    </div>
+
+  </div>
+
+  <script>
+    function showTab(name, btn) {
+      document.querySelectorAll('.ud-panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.ud-tab').forEach(t => t.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      btn.classList.add('active');
+    }
+    document.getElementById('hamburger').addEventListener('click', () => {
+      document.getElementById('nav-links').classList.toggle('open');
+    });
+  </script>
+</body>
+</html>

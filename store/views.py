@@ -259,7 +259,12 @@ def dashboard(request):
         'Delivered': Order.objects.filter(status='Delivered').count(),
     }
     latest_orders   = Order.objects.select_related('user').order_by('-id')[:10]
-    pending_returns = ReturnRequest.objects.filter(status='Pending').count()
+    pending_returns  = ReturnRequest.objects.filter(status='Pending').count()
+    return_counts    = {
+        'Return':   ReturnRequest.objects.filter(request_type='Return', status='Pending').count(),
+        'Exchange': ReturnRequest.objects.filter(request_type='Exchange', status='Pending').count(),
+        'Replace':  ReturnRequest.objects.filter(request_type='Replace', status='Pending').count(),
+    }
     latest_returns  = ReturnRequest.objects.select_related('order', 'user').order_by('-created_at')[:5]
 
     return render(request, 'dashboard.html', {
@@ -272,6 +277,7 @@ def dashboard(request):
         'live_count':      live_count,
         'live_visitors':   live_visitors,
         'pending_returns': pending_returns,
+        'return_counts':   return_counts,
         'latest_returns':  latest_returns,
     })
 
@@ -355,10 +361,12 @@ def submit_return_request(request, order_id):
     order = get_object_or_404(Order, id=order_id, user=request.user)
     if order.status != 'Delivered':
         return redirect('orders')
+    # Block if request already exists for this order
+    existing = ReturnRequest.objects.filter(order=order, user=request.user).first()
     if request.method == 'POST':
         request_type = request.POST.get('request_type')
         reason       = request.POST.get('reason', '').strip()
-        if request_type in ['Return', 'Exchange', 'Replace'] and reason:
+        if request_type in ['Return', 'Exchange', 'Replace'] and reason and not existing:
             rr = ReturnRequest.objects.create(
                 order=order, user=request.user,
                 request_type=request_type, reason=reason
@@ -366,8 +374,8 @@ def submit_return_request(request, order_id):
             recipient = request.user.email
             if recipient:
                 send_return_email(rr, recipient, event='submitted')
-            return redirect('orders')
-    return render(request, 'return_request.html', {'order': order})
+        return redirect('orders')
+    return render(request, 'return_request.html', {'order': order, 'existing': existing})
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
@@ -473,3 +481,32 @@ def reviews_api(request):
         'date':     r.created_at.strftime('%d %b %Y'),
     } for r in reviews]
     return JsonResponse({'reviews': data})
+
+
+# ── User Dashboard ──────────────────────────────────────────
+@login_required
+def user_dashboard(request):
+    orders = Order.objects.filter(user=request.user).order_by('-id')
+    parsed_orders = []
+    for o in orders:
+        try:
+            items = json.loads(o.items)
+        except (ValueError, TypeError):
+            items = []
+        parsed_orders.append({
+            'id': o.id, 'items': items, 'total': o.total,
+            'status': o.status, 'address': o.address,
+            'tracking_id': o.tracking_id,
+        })
+
+    return_requests = ReturnRequest.objects.filter(user=request.user).select_related('order').order_by('-created_at')
+    reviews         = Review.objects.filter(user=request.user).order_by('-created_at')
+    total_spent     = orders.aggregate(t=Sum('total'))['t'] or 0
+
+    return render(request, 'user_dashboard.html', {
+        'orders':          parsed_orders,
+        'return_requests': return_requests,
+        'reviews':         reviews,
+        'total_spent':     total_spent,
+        'total_orders':    orders.count(),
+    })

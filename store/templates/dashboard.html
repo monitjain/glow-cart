@@ -206,8 +206,22 @@
         <div class="dash-stat-card">
           <div class="dash-icon dash-icon-red">🔄</div>
           <div>
-            <div class="dash-stat-val">{{ pending_returns }}</div>
+            <div class="dash-stat-val">{{ return_counts.Return }}</div>
             <div class="dash-stat-label">Pending Returns</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-blue">🔁</div>
+          <div>
+            <div class="dash-stat-val">{{ return_counts.Exchange }}</div>
+            <div class="dash-stat-label">Pending Exchanges</div>
+          </div>
+        </div>
+        <div class="dash-stat-card">
+          <div class="dash-icon dash-icon-teal">🔧</div>
+          <div>
+            <div class="dash-stat-val">{{ return_counts.Replace }}</div>
+            <div class="dash-stat-label">Pending Replacements</div>
           </div>
         </div>
         <div class="dash-stat-card">
