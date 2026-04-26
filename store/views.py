@@ -284,6 +284,14 @@ def success(request):
     return render(request, 'success.html')
 
 
+def policy(request):
+    return render(request, 'policy.html')
+
+
+def faq(request):
+    return render(request, 'faq.html')
+
+
 def signup(request):
     if request.method == 'POST':
         username  = request.POST.get('username', '').strip()

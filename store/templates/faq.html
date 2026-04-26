@@ -1,0 +1,173 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FAQ — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .faq-wrapper { max-width: 860px; margin: 120px auto 80px; padding: 0 24px; }
+    .faq-header { text-align: center; margin-bottom: 48px; }
+    .faq-header h1 { font-family: 'Playfair Display', serif; font-size: 36px; color: #fff; margin-bottom: 12px; }
+    .faq-header p { color: var(--text-muted); font-size: 15px; }
+    .faq-category { margin-bottom: 40px; }
+    .faq-category h2 { font-size: 16px; font-weight: 600; color: var(--teal); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px; }
+    .faq-item { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 10px; overflow: hidden; transition: var(--transition); }
+    .faq-item:hover { border-color: rgba(212,175,55,0.3); }
+    .faq-question { padding: 18px 22px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 15px; font-weight: 500; color: var(--text); user-select: none; }
+    .faq-question:hover { color: var(--gold); }
+    .faq-icon { font-size: 20px; color: var(--gold); transition: transform 0.3s ease; flex-shrink: 0; }
+    .faq-item.open .faq-icon { transform: rotate(45deg); }
+    .faq-answer { max-height: 0; overflow: hidden; transition: max-height 0.35s ease, padding 0.3s ease; }
+    .faq-answer-inner { padding: 0 22px 18px; font-size: 14px; color: var(--text-muted); line-height: 1.8; border-top: 1px solid var(--border); padding-top: 16px; }
+    .faq-answer-inner a { color: var(--gold); font-weight: 600; }
+    .faq-item.open .faq-answer { max-height: 400px; }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-size: 14px; font-weight: 600; margin-bottom: 24px; }
+    @media (max-width: 768px) { .faq-wrapper { margin-top: 90px; } .faq-header h1 { font-size: 26px; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar scrolled">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/orders/">My Orders</a>
+      <a href="/cart/" class="nav-cart">🛒</a>
+    </div>
+  </nav>
+
+  <div class="faq-wrapper">
+    <a href="/" class="back-btn">← Back to Home</a>
+    <div class="faq-header">
+      <h1>Frequently Asked <span style="color:var(--gold);">Questions</span></h1>
+      <p>Everything you need to know about Glow Cart. Can't find an answer? <a href="mailto:glowcart0811@gmail.com" style="color:var(--gold);font-weight:600;">Contact us</a></p>
+    </div>
+
+    <!-- Orders -->
+    <div class="faq-category">
+      <h2>📦 Orders</h2>
+
+      <div class="faq-item">
+        <div class="faq-question">How do I place an order?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Browse products on our homepage → Click "Add to Cart" → Go to Cart → Click "Proceed to Checkout" → Fill in your delivery details → Click "Place Order". You will receive a confirmation email immediately.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Can I modify or cancel my order after placing it?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Orders can be cancelled within 2 hours of placement. After that, the order is processed and cannot be cancelled. Contact us at <a href="mailto:glowcart0811@gmail.com">glowcart0811@gmail.com</a> immediately if you need to cancel.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">How do I track my order?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Once your order is shipped, you will receive an email with a tracking ID and link. You can also go to <a href="/orders/">My Orders</a> to see the current status and tracking information.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">What payment methods do you accept?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">We currently accept <strong style="color:var(--gold);">Cash on Delivery (COD)</strong> only. You pay when the product is delivered to your doorstep. No advance payment required.</div></div>
+      </div>
+    </div>
+
+    <!-- Delivery -->
+    <div class="faq-category">
+      <h2>🚚 Delivery</h2>
+
+      <div class="faq-item">
+        <div class="faq-question">How long does delivery take?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          Delivery times depend on your location:<br><br>
+          • Same city (Jodhpur): 1–2 days<br>
+          • Same state (Rajasthan): 2–3 days<br>
+          • Metro cities: 2–4 days<br>
+          • Other states: 3–5 days<br>
+          • Remote areas: 5–7 days
+        </div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Is there a delivery charge?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Delivery is <strong style="color:var(--gold);">FREE on orders above ₹999</strong>. For orders below ₹999, a shipping charge of ₹49 is applied at checkout.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Do you deliver all over India?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Yes! We deliver to 24,000+ pincodes across India through our courier partner Shiprocket. Enter your pincode at checkout to confirm availability.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">What if I am not available at the time of delivery?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">The courier will attempt delivery 2–3 times. If all attempts fail, the package will be returned to us. Contact us to reschedule delivery.</div></div>
+      </div>
+    </div>
+
+    <!-- Returns -->
+    <div class="faq-category">
+      <h2>🔄 Returns & Refunds</h2>
+
+      <div class="faq-item">
+        <div class="faq-question">How do I return a product?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Go to <a href="/orders/">My Orders</a> → Find your delivered order → Click "Return / Exchange" → Select "Return" → Describe the reason → Submit. Our team will review within 24–48 hours.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">How long does a refund take?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Refunds are processed within <strong style="color:var(--gold);">5–7 business days</strong> after we receive and verify the returned product. For COD orders, refund is sent via UPI or bank transfer.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">I received a damaged product. What should I do?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Raise a replacement request within <strong style="color:var(--gold);">48 hours</strong> of delivery. Go to My Orders → Click "Return / Exchange" → Select "Replace" → Attach photos of the damage. We will ship a replacement within 2–3 business days.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">Can I exchange a product for a different one?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Yes, exchanges are available within 7 days of delivery. Go to My Orders → Click "Return / Exchange" → Select "Exchange" → Describe what you want. Our team will process it after receiving the original product.</div></div>
+      </div>
+    </div>
+
+    <!-- Account -->
+    <div class="faq-category">
+      <h2>👤 Account</h2>
+
+      <div class="faq-item">
+        <div class="faq-question">Do I need an account to order?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Yes, you need to create a free account to place orders. This helps us track your orders and send you updates. <a href="/signup/">Sign up here</a> — it takes less than 1 minute.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">I forgot my password. How do I reset it?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">Contact us at <a href="mailto:glowcart0811@gmail.com">glowcart0811@gmail.com</a> with your registered email and we will reset your password manually within 24 hours.</div></div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question">How do I use a promo code?<span class="faq-icon">+</span></div>
+        <div class="faq-answer"><div class="faq-answer-inner">
+          At checkout, enter your promo code in the "Promo Code" field and click Apply. Available codes:<br><br>
+          • <strong style="color:var(--gold);">WELCOME10</strong> — 10% off your first order<br>
+          • <strong style="color:var(--gold);">FLASH40</strong> — 40% off (during flash sales)<br>
+          • <strong style="color:var(--gold);">NEW200</strong> — ₹200 flat off
+        </div></div>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:48px;padding:32px;background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);">
+      <p style="font-size:16px;color:var(--text);margin-bottom:12px;">Still have questions?</p>
+      <p style="font-size:14px;color:var(--text-muted);margin-bottom:20px;">We're here to help. Reach out to us anytime.</p>
+      <a href="mailto:glowcart0811@gmail.com" class="btn-gold">Email Us →</a>
+    </div>
+  </div>
+
+  <script>
+    document.querySelectorAll('.faq-question').forEach(q => {
+      q.addEventListener('click', () => {
+        const item = q.parentElement;
+        const isOpen = item.classList.contains('open');
+        document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+        if (!isOpen) item.classList.add('open');
+      });
+    });
+  </script>
+</body>
+</html>

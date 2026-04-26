@@ -1,0 +1,116 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Return Policy — Glow Cart</title>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/style.css' %}">
+  <style>
+    .policy-wrapper { max-width: 860px; margin: 120px auto 80px; padding: 0 24px; }
+    .policy-card { background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius); padding: 48px; }
+    .policy-card h1 { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--gold); margin-bottom: 8px; }
+    .policy-card .subtitle { color: var(--text-muted); font-size: 14px; margin-bottom: 40px; }
+    .policy-section { margin-bottom: 36px; }
+    .policy-section h2 { font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 16px; padding-bottom: 10px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .policy-section ul { list-style: none; padding: 0; }
+    .policy-section ul li { padding: 10px 0; color: var(--text-muted); font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; align-items: flex-start; gap: 10px; line-height: 1.7; }
+    .policy-section ul li::before { content: '✦'; color: var(--gold); font-size: 10px; margin-top: 5px; flex-shrink: 0; }
+    .policy-highlight { background: rgba(212,175,55,0.08); border: 1px solid var(--border); border-radius: 10px; padding: 20px 24px; margin-bottom: 24px; }
+    .policy-highlight p { font-size: 14px; color: var(--text-muted); line-height: 1.8; }
+    .policy-highlight strong { color: var(--gold); }
+    .back-btn { display: inline-flex; align-items: center; gap: 8px; color: var(--gold); font-size: 14px; font-weight: 600; margin-bottom: 24px; }
+    .back-btn:hover { opacity: 0.8; }
+    @media (max-width: 768px) { .policy-wrapper { margin-top: 90px; } .policy-card { padding: 28px 20px; } .policy-card h1 { font-size: 24px; } }
+  </style>
+</head>
+<body>
+  <nav class="navbar scrolled">
+    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+    <div class="nav-links">
+      <a href="/">Home</a>
+      <a href="/orders/">My Orders</a>
+      <a href="/cart/" class="nav-cart">🛒</a>
+    </div>
+  </nav>
+
+  <div class="policy-wrapper">
+    <a href="/" class="back-btn">← Back to Home</a>
+    <div class="policy-card">
+      <h1>Return & Exchange Policy</h1>
+      <p class="subtitle">Last updated: April 2026 · Glow Cart</p>
+
+      <div class="policy-highlight">
+        <p>At <strong>Glow Cart</strong>, we want you to be completely satisfied with your purchase. If you are not happy with your order, we offer easy returns, exchanges, and replacements as per the policy below.</p>
+      </div>
+
+      <div class="policy-section">
+        <h2>🔄 Return Policy</h2>
+        <ul>
+          <li>Returns are accepted within <strong style="color:var(--gold);">7 days</strong> of delivery date.</li>
+          <li>Product must be <strong style="color:var(--gold);">unused, unwashed</strong> and in original packaging with all tags intact.</li>
+          <li>Proof of purchase (order ID) is required for all returns.</li>
+          <li>Items purchased during sale or with promo codes are eligible for exchange only, not refund.</li>
+          <li>Refund will be processed within <strong style="color:var(--gold);">5–7 business days</strong> after we receive and verify the product.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>🔃 Exchange Policy</h2>
+        <ul>
+          <li>Exchange requests must be raised within <strong style="color:var(--gold);">7 days</strong> of delivery.</li>
+          <li>Exchange is available for different size, color, or variant of the same product.</li>
+          <li>Product must be in original condition with all packaging.</li>
+          <li>Shipping charges for exchange may apply depending on the reason.</li>
+          <li>Exchange will be processed within <strong style="color:var(--gold);">3–5 business days</strong> after receiving the original product.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>🔁 Replacement Policy (Damaged / Defective)</h2>
+        <ul>
+          <li>If you receive a <strong style="color:var(--gold);">damaged or defective</strong> product, raise a replacement request within <strong style="color:var(--gold);">48 hours</strong> of delivery.</li>
+          <li>Attach clear photos of the damaged product while submitting the request.</li>
+          <li>Replacement will be shipped within <strong style="color:var(--gold);">2–3 business days</strong> after verification.</li>
+          <li>No need to return the damaged product for replacement requests.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>💰 Refund Policy</h2>
+        <ul>
+          <li>Refunds are processed to the original payment method or via UPI/bank transfer for COD orders.</li>
+          <li>COD refunds are transferred directly to your bank account within <strong style="color:var(--gold);">5–7 business days</strong>.</li>
+          <li>Shipping charges are non-refundable unless the return is due to our error.</li>
+          <li>You will receive an email confirmation once your refund is processed.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>❌ Non-Returnable Items</h2>
+        <ul>
+          <li>Items that have been used, washed, or damaged by the customer.</li>
+          <li>Products without original packaging or missing tags.</li>
+          <li>Items returned after 7 days of delivery.</li>
+          <li>Customized or personalized products.</li>
+        </ul>
+      </div>
+
+      <div class="policy-section">
+        <h2>📋 How to Raise a Request</h2>
+        <ul>
+          <li>Login to your account → Go to <strong style="color:var(--gold);">My Orders</strong>.</li>
+          <li>Find the delivered order → Click <strong style="color:var(--gold);">"Return / Exchange"</strong> button.</li>
+          <li>Select request type and describe the issue.</li>
+          <li>Our team will review and respond within <strong style="color:var(--gold);">24–48 hours</strong>.</li>
+        </ul>
+      </div>
+
+      <div class="policy-highlight" style="margin-top:32px;margin-bottom:0;">
+        <p>For any queries, contact us at <strong>glowcart0811@gmail.com</strong> or call <strong>+91 9460769421</strong>. We are available Monday–Saturday, 10 AM – 10 PM.</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
