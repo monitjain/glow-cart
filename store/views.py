@@ -16,7 +16,7 @@ from .models import Product, Order, SiteVisitor, ReturnRequest, Review
 logger = logging.getLogger(__name__)
 
 SHIPROCKET_EMAIL    = 'monitjain72@gmail.com'
-SHIPROCKET_PASSWORD = 'bu8i4XnPWY4*2MiI1aEjdb!WQ6mv#tSw'
+SHIPROCKET_PASSWORD = '0BrJUFzXbw^a#k*tFWwN6oc8IoNjRvFj'
 SHIPROCKET_API      = 'https://apiv2.shiprocket.in/v1/external'
 
 
@@ -389,6 +389,14 @@ def live_visitors_api(request):
     for v in visitors:
         v['last_seen'] = v['last_seen'].strftime('%H:%M:%S')
     return JsonResponse({'count': len(visitors), 'visitors': visitors})
+
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def push_to_shiprocket(request, order_id):
+    """Manually push an existing order to Shiprocket from dashboard."""
+    order = get_object_or_404(Order, id=order_id)
+    create_shiprocket_order(order)
+    return redirect('manage_orders')
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')

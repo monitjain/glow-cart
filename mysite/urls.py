@@ -24,6 +24,7 @@ urlpatterns = [
     path('dashboard/live/', views.live_visitors_api, name='live_visitors_api'),
     path('dashboard/orders/', views.manage_orders, name='manage_orders'),
     path('dashboard/orders/<int:order_id>/status/', views.update_order_status, name='update_order_status'),
+    path('dashboard/orders/<int:order_id>/shiprocket/', views.push_to_shiprocket, name='push_to_shiprocket'),
     path('dashboard/products/', views.manage_products, name='manage_products'),
     path('dashboard/products/<int:product_id>/delete/', views.delete_product, name='delete_product'),
     path('dashboard/customers/', views.manage_customers, name='manage_customers'),
