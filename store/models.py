@@ -22,11 +22,18 @@ class Order(models.Model):
     user        = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name        = models.CharField(max_length=100)
     address     = models.TextField()
+    street      = models.CharField(max_length=200, blank=True, default='')
+    city        = models.CharField(max_length=100, blank=True, default='')
+    state       = models.CharField(max_length=100, blank=True, default='')
+    pincode     = models.CharField(max_length=10,  blank=True, default='')
     phone       = models.CharField(max_length=15)
+    email       = models.EmailField(blank=True, default='')
     items       = models.TextField()
     total       = models.IntegerField()
     status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     tracking_id = models.CharField(max_length=100, blank=True, default='')
+    shiprocket_order_id    = models.CharField(max_length=100, blank=True, default='')
+    shiprocket_shipment_id = models.CharField(max_length=100, blank=True, default='')
 
     def __str__(self):
         return f"Order #{self.id} — {self.name}"
