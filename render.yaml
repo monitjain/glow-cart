@@ -7,9 +7,9 @@ services:
     startCommand: gunicorn mysite.wsgi:application --bind 0.0.0.0:$PORT --workers 1 --timeout 120 --preload
     envVars:
       - key: DATABASE_URL
-        value: postgresql://glowcart_db_user:G9Foib9SfAJtVvhQy9f6Vqx04rMN6iRq@dpg-d7c0c2l8nd3s73fiiih0-a/glowcart_db
+        value: postgresql://neondb_owner:npg_rDk7yOxQev4b@ep-spring-credit-aq2equod.c-8.us-east-1.aws.neon.tech/neondb?sslmode=require
       - key: DEBUG
-        value: "True"
+        value: "False"
       - key: SECRET_KEY
         generateValue: true
       - key: EMAIL_HOST_USER
