@@ -1,117 +1,238 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Manage Products — Glow Cart</title>
+  <title>Manage Products - Glow Cart</title>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
   <style>
     .dash-layout{display:flex;min-height:100vh;padding-top:64px}
     .dash-sidebar{width:240px;flex-shrink:0;background:#080f18;border-right:1px solid var(--border);padding:32px 0;position:fixed;top:64px;left:0;bottom:0;overflow-y:auto}
     .sidebar-label{font-size:10px;font-weight:600;color:var(--text-muted);letter-spacing:2px;text-transform:uppercase;padding:0 24px;margin:24px 0 8px}
-    .sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 24px;font-size:14px;font-weight:500;color:var(--text-muted);transition:var(--transition);border-left:3px solid transparent}
-    .sidebar-link:hover,.sidebar-link.active{color:var(--gold);background:rgba(212,175,55,0.07);border-left-color:var(--gold)}
+    .sidebar-link{display:flex;align-items:center;gap:12px;padding:11px 24px;font-size:14px;font-weight:500;color:var(--text-muted);border-left:3px solid transparent}
+    .sidebar-link:hover,.sidebar-link.active{color:var(--gold);background:rgba(212,175,55,.07);border-left-color:var(--gold)}
     .sidebar-link span{font-size:18px}
-    .dash-main{margin-left:240px;flex:1;padding:36px 40px 60px}
-    .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px;flex-wrap:wrap;gap:12px}
+    .dash-main{margin-left:240px;flex:1;padding:36px 40px 60px;min-width:0}
+    .dash-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:25px;flex-wrap:wrap;gap:12px}
     .dash-header h2{font-family:'Playfair Display',serif;font-size:26px;color:#fff}
     .dash-header p{font-size:13px;color:var(--text-muted);margin-top:4px}
+    .panel{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:25px}
+    .panel h3{font-family:'Playfair Display',serif;color:#fff;margin-bottom:18px}
+    .product-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+    .field{display:flex;flex-direction:column;gap:7px}
+    .field.full{grid-column:1/-1}
+    .field label{font-size:12px;color:var(--text-muted)}
+    .field input,.field textarea{width:100%;padding:11px 13px;background:#101c2a;color:#fff;border:1px solid var(--border);border-radius:8px;font:inherit;font-size:13px}
+    .field input:focus,.field textarea:focus{outline:none;border-color:var(--gold)}
+    .field textarea{min-height:85px;resize:vertical}
+    .check-field{display:flex;align-items:center;gap:9px;color:var(--text-muted);font-size:13px}
+    .check-field input{accent-color:var(--gold);width:16px;height:16px}
+    .add-btn,.save-btn{padding:10px 22px;background:linear-gradient(135deg,var(--gold),#c9a227);color:#0D1B2A;border:0;border-radius:30px;font-size:13px;font-weight:700;cursor:pointer}
+    .cancel-btn,.edit-btn{padding:8px 14px;background:rgba(212,175,55,.12);color:var(--gold);border:1px solid rgba(212,175,55,.3);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer}
+    .delete-btn{padding:7px 13px;background:rgba(231,76,60,.15);color:#e74c3c;border:1px solid rgba(231,76,60,.3);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer}
     .dash-table-card{background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);overflow:auto}
-    .dash-table{width:100%;border-collapse:collapse;font-size:14px;min-width:600px}
-    .dash-table thead th{background:rgba(255,255,255,0.03);padding:14px 18px;text-align:left;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border)}
-    .dash-table tbody td{padding:12px 18px;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
-    .dash-table tbody tr:last-child td{border-bottom:none}
-    .dash-table tbody tr:hover{background:rgba(255,255,255,0.02)}
-    .prod-img{width:52px;height:52px;object-fit:cover;border-radius:8px;border:1px solid var(--border)}
-    .delete-btn{padding:6px 14px;background:rgba(231,76,60,0.15);color:#e74c3c;border:1px solid rgba(231,76,60,0.3);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;transition:var(--transition)}
-    .delete-btn:hover{background:#e74c3c;color:#fff}
-    .edit-link{padding:6px 14px;background:rgba(212,175,55,0.12);color:var(--gold);border:1px solid rgba(212,175,55,0.3);border-radius:20px;font-size:12px;font-weight:700;transition:var(--transition)}
-    .edit-link:hover{background:var(--gold);color:#0D1B2A}
-    .add-btn{padding:10px 22px;background:linear-gradient(135deg,var(--gold),#c9a227);color:#0D1B2A;border:none;border-radius:30px;font-size:14px;font-weight:700;cursor:pointer;transition:var(--transition)}
-    .add-btn:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(212,175,55,0.3)}
-    .no-products{text-align:center;padding:48px;color:var(--text-muted);font-size:14px}
-    @media(max-width:900px){.dash-sidebar{display:none}.dash-main{margin-left:0;padding:20px 16px 40px}}
+    .dash-table{width:100%;border-collapse:collapse;font-size:13px;min-width:850px}
+    .dash-table th{background:rgba(255,255,255,.03);padding:14px;text-align:left;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border)}
+    .dash-table td{padding:13px 14px;color:var(--text);border-bottom:1px solid rgba(255,255,255,.05);vertical-align:middle}
+    .prod-img{width:48px;height:48px;object-fit:cover;border-radius:8px}
+    .status{font-size:11px;padding:5px 10px;border-radius:20px;font-weight:600}
+    .active{background:rgba(46,204,113,.12);color:#2ecc71}
+    .inactive{background:rgba(231,76,60,.12);color:#e74c3c}
+    .error-msg{padding:12px;background:rgba(231,76,60,.12);color:#ff7777;border-radius:8px;margin-bottom:15px;font-size:13px}
+    .no-products{text-align:center;padding:35px;color:var(--text-muted)}
+    .edit-panel{display:none;margin-top:12px;min-width:300px}
+    .edit-panel.open{display:block}
+    @media(max-width:900px){.dash-sidebar{display:none}.dash-main{margin-left:0;padding:22px 14px 40px}}
+    @media(max-width:600px){.product-form{grid-template-columns:1fr}.field.full{grid-column:auto}.panel{padding:16px}}
   </style>
 </head>
 <body>
-  <nav class="navbar scrolled" id="navbar">
-    <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
-    <div class="nav-links" id="nav-links">
-      <a href="/">🏪 Store</a>
-      <a href="/dashboard/" class="nav-cart">📊 Dashboard</a>
-      <form method="POST" action="/logout/" style="display:inline;">
-        {% csrf_token %}
-        <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
-      </form>
-    </div>
-    <button class="hamburger" id="hamburger">&#9776;</button>
-  </nav>
-
-  <div class="dash-layout">
-    <aside class="dash-sidebar">
-      <div class="sidebar-label">Overview</div>
-      <a href="/dashboard/" class="sidebar-link"><span>📊</span> Dashboard</a>
-      <div class="sidebar-label">Manage</div>
-      <a href="/dashboard/orders/" class="sidebar-link"><span>📦</span> All Orders</a>
-      <a href="/dashboard/products/" class="sidebar-link active"><span>🛍️</span> Products</a>
-      <a href="/dashboard/customers/" class="sidebar-link"><span>👥</span> Customers</a>
-      <div class="sidebar-label">System</div>
-      <a href="/admin/" class="sidebar-link"><span>⚙️</span> Django Admin</a>
-      <a href="/" class="sidebar-link"><span>🏪</span> View Store</a>
-    </aside>
-
-    <main class="dash-main">
-      <div class="dash-header">
-        <div>
-          <h2>🛍️ Products</h2>
-          <p>{{ products|length }} product{{ products|length|pluralize }} in store</p>
-        </div>
-        <div style="display:flex;gap:12px;align-items:center;">
-          <a href="/admin/store/product/add/" class="add-btn">+ Add Product</a>
-          <a href="/dashboard/" class="btn-outline" style="padding:8px 20px;font-size:13px;">← Dashboard</a>
-        </div>
-      </div>
-
-      <div class="dash-table-card">
-        {% if products %}
-        <table class="dash-table">
-          <thead>
-            <tr><th>Image</th><th>#</th><th>Name</th><th>Price</th><th>Description</th><th>Actions</th></tr>
-          </thead>
-          <tbody>
-            {% for product in products %}
-            <tr>
-              <td><img src="{{ product.image.url }}" class="prod-img" alt="{{ product.name }}"></td>
-              <td>#{{ product.id }}</td>
-              <td style="font-weight:600;">{{ product.name }}</td>
-              <td style="color:var(--gold);font-weight:700;">₹{{ product.price }}</td>
-              <td style="color:var(--text-muted);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
-                {{ product.description|default:"—" }}
-              </td>
-              <td style="display:flex;gap:8px;align-items:center;">
-                <a href="/admin/store/product/{{ product.id }}/change/" class="edit-link">Edit</a>
-                <form method="POST" action="{% url 'delete_product' product.id %}" onsubmit="return confirm('Delete {{ product.name }}?')">
-                  {% csrf_token %}
-                  <button type="submit" class="delete-btn">Delete</button>
-                </form>
-              </td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-        {% else %}
-        <p class="no-products">No products yet. <a href="/admin/store/product/add/" style="color:var(--gold);">Add your first product →</a></p>
-        {% endif %}
-      </div>
-    </main>
+<nav class="navbar scrolled" id="navbar">
+  <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+  <div class="nav-links" id="nav-links">
+    <a href="/">Store</a>
+    <a href="/dashboard/" class="nav-cart">Dashboard</a>
+    <form method="POST" action="/logout/" style="display:inline;">
+      {% csrf_token %}
+      <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+    </form>
   </div>
+  <button class="hamburger" id="hamburger">&#9776;</button>
+</nav>
 
-  <script>
-    document.getElementById("hamburger").addEventListener("click", () => {
-      document.getElementById("nav-links").classList.toggle("open");
-    });
-  </script>
+<div class="dash-layout">
+  <aside class="dash-sidebar">
+    <div class="sidebar-label">Overview</div>
+    <a href="/dashboard/" class="sidebar-link"><span>📊</span> Dashboard</a>
+    <div class="sidebar-label">Manage</div>
+    <a href="/dashboard/orders/" class="sidebar-link"><span>📦</span> All Orders</a>
+    <a href="/dashboard/products/" class="sidebar-link active"><span>🛍️</span> Products</a>
+    <a href="/dashboard/customers/" class="sidebar-link"><span>👥</span> Customers</a>
+    <div class="sidebar-label">System</div>
+    <a href="/admin/" class="sidebar-link"><span>⚙️</span> Django Admin</a>
+    <a href="/" class="sidebar-link"><span>🏠</span> View Store</a>
+  </aside>
+
+  <main class="dash-main">
+    <div class="dash-header">
+      <div>
+        <h2>🛍️ Products</h2>
+        <p>{{ products|length }} products in catalogue</p>
+      </div>
+      <a href="#add-product" class="add-btn">+ Add Product</a>
+    </div>
+
+    {% if error %}
+      <div class="error-msg">{{ error }}</div>
+    {% endif %}
+
+    <section class="panel" id="add-product">
+      <h3>Add New Product</h3>
+      <form method="POST" enctype="multipart/form-data" class="product-form">
+        {% csrf_token %}
+        <div class="field">
+          <label>Product Name *</label>
+          <input type="text" name="name" maxlength="100" required>
+        </div>
+        <div class="field">
+          <label>Price (₹) *</label>
+          <input type="number" name="price" min="0" step="1" required>
+        </div>
+        <div class="field">
+          <label>SKU (optional)</label>
+          <input type="text" name="sku" maxlength="50" placeholder="e.g. GC-001">
+        </div>
+        <div class="field">
+          <label>Stock Quantity (optional)</label>
+          <input type="number" name="stock" min="0" placeholder="Leave blank if unknown">
+        </div>
+        <div class="field full">
+          <label>Product Description</label>
+          <textarea name="description"></textarea>
+        </div>
+        <div class="field full">
+          <label>Product Image *</label>
+          <input type="file" name="image" accept="image/*" required>
+        </div>
+        <div class="field full">
+          <label class="check-field">
+            <input type="checkbox" name="is_active" checked>
+            Make product visible in store
+          </label>
+        </div>
+        <div class="field full">
+          <button type="submit" class="add-btn">Save New Product</button>
+        </div>
+      </form>
+    </section>
+
+    <h3 style="color:#fff;margin-bottom:15px;">Existing Products</h3>
+
+    <div class="dash-table-card">
+      {% if products %}
+      <table class="dash-table">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Product</th>
+            <th>Price</th>
+            <th>SKU</th>
+            <th>Stock</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for product in products %}
+          <tr>
+            <td>
+              {% if product.image %}
+                <img src="{{ product.image.url }}" class="prod-img" alt="{{ product.name }}">
+              {% else %}
+                No image
+              {% endif %}
+            </td>
+            <td>{{ product.name }}</td>
+            <td>₹{{ product.price }}</td>
+            <td>{{ product.sku|default:"—" }}</td>
+            <td>{{ product.stock|default_if_none:"Unknown" }}</td>
+            <td>
+              {% if product.is_active %}
+                <span class="status active">Active</span>
+              {% else %}
+                <span class="status inactive">Inactive</span>
+              {% endif %}
+            </td>
+            <td>
+              <button type="button" class="edit-btn" onclick="toggleEdit('edit-{{ product.id }}')">Edit</button>
+              <form method="POST" action="{% url 'delete_product' product.id %}" style="display:inline;" onsubmit="return confirm('Permanently delete {{ product.name|escapejs }}?')">
+                {% csrf_token %}
+                <button type="submit" class="delete-btn">Delete</button>
+              </form>
+
+              <div class="edit-panel" id="edit-{{ product.id }}">
+                <form method="POST" enctype="multipart/form-data" class="product-form">
+                  {% csrf_token %}
+                  <input type="hidden" name="product_id" value="{{ product.id }}">
+                  <div class="field">
+                    <label>Name</label>
+                    <input name="name" value="{{ product.name }}" maxlength="100" required>
+                  </div>
+                  <div class="field">
+                    <label>Price (₹)</label>
+                    <input type="number" name="price" value="{{ product.price }}" min="0" required>
+                  </div>
+                  <div class="field">
+                    <label>SKU</label>
+                    <input name="sku" value="{{ product.sku|default_if_none:'' }}" maxlength="50">
+                  </div>
+                  <div class="field">
+                    <label>Stock</label>
+                    <input type="number" name="stock" value="{{ product.stock|default_if_none:'' }}" min="0">
+                  </div>
+                  <div class="field full">
+                    <label>Description</label>
+                    <textarea name="description">{{ product.description }}</textarea>
+                  </div>
+                  <div class="field full">
+                    <label>Replace image (optional)</label>
+                    <input type="file" name="image" accept="image/*">
+                  </div>
+                  <div class="field full">
+                    <label class="check-field">
+                      <input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}>
+                      Product visible in store
+                    </label>
+                  </div>
+                  <div class="field full" style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button type="submit" class="save-btn">Save Changes</button>
+                    <button type="button" class="cancel-btn" onclick="toggleEdit('edit-{{ product.id }}')">Cancel</button>
+                  </div>
+                </form>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+        <p class="no-products">No products found. Add your first product above.</p>
+      {% endif %}
+    </div>
+  </main>
+</div>
+
+<script>
+  document.getElementById("hamburger").addEventListener("click", () => {
+    document.getElementById("nav-links").classList.toggle("open");
+  });
+
+  function toggleEdit(id) {
+    document.getElementById(id).classList.toggle("open");
+  }
+</script>
 </body>
 </html>

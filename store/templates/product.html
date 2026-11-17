@@ -43,7 +43,13 @@
       <h2>{{ product.name }}</h2>
       <p class="price">₹{{ product.price }}</p>
       <div class="product-rating">★★★★☆ <span>4.0 / 5</span></div>
-      <p class="stock-badge">✔ In Stock</p>
+      {% if product.stock is None %}
+  <p class="stock-badge">✔ Availability on request</p>
+{% elif product.stock > 0 %}
+  <p class="stock-badge">✔ In Stock ({{ product.stock }} available)</p>
+{% else %}
+  <p class="stock-badge">✖ Out of Stock</p>
+{% endif %}
       {% if product.description %}
         <p class="desc">{{ product.description }}</p>
       {% endif %}

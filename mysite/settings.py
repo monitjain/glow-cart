@@ -9,9 +9,11 @@ DEBUG = os.environ.get('DEBUG', 'True') == 'True'
 ALLOWED_HOSTS = ['*']
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.onrender.com',
+    'https://glowcart.co.in',
+    'https://www.glowcart.co.in',
     'http://localhost:8000',
     'http://127.0.0.1:8000',
+
 ]
 
 INSTALLED_APPS = [
@@ -27,6 +29,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'mysite.middleware.RedirectOldRenderDomainMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -94,10 +97,11 @@ MEDIA_ROOT = BASE_DIR / 'media'
 
 # Cloudinary for persistent media storage
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': 'dkla4wg06',
-    'API_KEY': '811982224118176',
-    'API_SECRET': '-y5wv_64ms--L5PnsKxsdrlmafE',
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME', 'dkla4wg06'),
+    'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
+
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.MediaCloudinaryStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

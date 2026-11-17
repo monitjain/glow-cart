@@ -213,9 +213,10 @@ def track_visitor(request):
 
 
 # ── Public views ──────────────────────────────────────────────
+
 def home(request):
     track_visitor(request)
-    products = Product.objects.all()
+    products = Product.objects.filter(is_active=True)
     return render(request, 'home.html', {'products': products})
 
 
@@ -226,7 +227,7 @@ def cart(request):
 
 def product_detail(request, id):
     track_visitor(request)
-    product = get_object_or_404(Product, id=id)
+    product = get_object_or_404(Product, id=id, is_active=True)
     return render(request, 'product.html', {'product': product})
 
 
@@ -433,9 +434,71 @@ def update_order_status(request, order_id):
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
+
 def manage_products(request):
     products = Product.objects.all().order_by('-id')
-    return render(request, 'manage_products.html', {'products': products})
+    error = ''
+    editing_product = None
+
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id', '').strip()
+
+        if product_id:
+            editing_product = get_object_or_404(Product, id=product_id)
+
+        name = request.POST.get('name', '').strip()
+        price = request.POST.get('price', '').strip()
+        sku = request.POST.get('sku', '').strip() or None
+        stock_value = request.POST.get('stock', '').strip()
+        description = request.POST.get('description', '').strip()
+        is_active = request.POST.get('is_active') == 'on'
+        image = request.FILES.get('image')
+
+        if not name or not price:
+            error = 'Product name and price are required.'
+        else:
+            try:
+                price = int(price)
+                stock = int(stock_value) if stock_value else None
+
+                if price < 0 or (stock is not None and stock < 0):
+                    raise ValueError
+
+                duplicate_sku = Product.objects.filter(sku=sku).exclude(
+                    id=editing_product.id if editing_product else None
+                ).exists() if sku else False
+
+                if duplicate_sku:
+                    error = 'This SKU is already assigned to another product.'
+                elif not editing_product and not image:
+                    error = 'Please upload a product image.'
+                else:
+                    product = editing_product or Product()
+
+                    product.name = name
+                    product.price = price
+                    product.sku = sku
+                    product.stock = stock
+                    product.description = description
+                    product.is_active = is_active
+
+                    if image:
+                        product.image = image
+
+                    product.save()
+                    return redirect('manage_products')
+
+            except ValueError:
+                error = 'Enter a valid price and stock quantity.'
+
+    products = Product.objects.all().order_by('-id')
+
+    return render(request, 'manage_products.html', {
+        'products': products,
+        'error': error,
+        'editing_product': editing_product,
+    })
+
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')

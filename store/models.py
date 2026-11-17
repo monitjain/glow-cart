@@ -2,14 +2,30 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+
 class Product(models.Model):
-    name        = models.CharField(max_length=100)
-    price       = models.IntegerField()
-    image       = models.ImageField(upload_to='images/')
+    name = models.CharField(max_length=100)
+    price = models.IntegerField()
+    image = models.ImageField(upload_to='images/')
     description = models.TextField(blank=True, default='')
+
+    # Inventory and product management
+    sku = models.CharField(
+        max_length=50,
+        unique=True,
+        null=True,
+        blank=True
+    )
+    stock = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        default=None
+    )
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.name
+
 
 
 class Order(models.Model):
