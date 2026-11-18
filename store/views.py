@@ -7,6 +7,7 @@ from django.contrib.auth import login
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum
+from django.db import models
 from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.utils import timezone
@@ -400,10 +401,47 @@ def push_to_shiprocket(request, order_id):
     return redirect('manage_orders')
 
 
+
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
 def manage_orders(request):
-    all_orders = Order.objects.select_related('user').order_by('-id')
-    return render(request, 'manage_orders.html', {'orders': all_orders})
+    all_orders = Order.objects.select_related('user').order_by('-created_at', '-id')
+
+    # Search orders
+    search_query = request.GET.get('q', '').strip()
+    if search_query:
+        all_orders = all_orders.filter(
+            models.Q(name__icontains=search_query) |
+            models.Q(phone__icontains=search_query) |
+            models.Q(email__icontains=search_query) |
+            models.Q(user__username__icontains=search_query) |
+            models.Q(id__icontains=search_query)
+        )
+
+    # Filter by status
+    status_filter = request.GET.get('status', '').strip()
+    valid_statuses = ['Pending', 'Confirmed', 'Shipped', 'Delivered']
+
+    if status_filter in valid_statuses:
+        all_orders = all_orders.filter(status=status_filter)
+
+    # Order summary counts (independent of search and filters)
+    total_orders = Order.objects.count()
+    pending_orders = Order.objects.filter(status='Pending').count()
+    confirmed_orders = Order.objects.filter(status='Confirmed').count()
+    shipped_orders = Order.objects.filter(status='Shipped').count()
+    delivered_orders = Order.objects.filter(status='Delivered').count()
+
+    return render(request, 'manage_orders.html', {
+        'orders': all_orders,
+        'search_query': search_query,
+        'status_filter': status_filter,
+        'status_choices': Order.STATUS_CHOICES,
+        'total_orders': total_orders,
+        'pending_orders': pending_orders,
+        'confirmed_orders': confirmed_orders,
+        'shipped_orders': shipped_orders,
+        'delivered_orders': delivered_orders,
+    })
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')

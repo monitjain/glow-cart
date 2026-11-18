@@ -75,6 +75,35 @@
         <a href="/dashboard/" class="btn-outline" style="padding:8px 20px;font-size:13px;">← Dashboard</a>
       </div>
 
+<div class="orders-stats" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;margin-bottom:24px;">
+
+  <div class="dash-table-card" style="padding:20px;">
+    <p style="color:var(--text-muted);font-size:13px;">Total Orders</p>
+    <h2 style="color:#fff;font-size:28px;">{{ total_orders }}</h2>
+  </div>
+
+  <div class="dash-table-card" style="padding:20px;">
+    <p style="color:var(--gold);font-size:13px;">Pending</p>
+    <h2 style="color:var(--gold);font-size:28px;">{{ pending_orders }}</h2>
+  </div>
+
+  <div class="dash-table-card" style="padding:20px;">
+    <p style="color:var(--teal);font-size:13px;">Confirmed</p>
+    <h2 style="color:var(--teal);font-size:28px;">{{ confirmed_orders }}</h2>
+  </div>
+
+  <div class="dash-table-card" style="padding:20px;">
+    <p style="color:#6495ed;font-size:13px;">Shipped</p>
+    <h2 style="color:#6495ed;font-size:28px;">{{ shipped_orders }}</h2>
+  </div>
+
+  <div class="dash-table-card" style="padding:20px;">
+    <p style="color:#2ecc71;font-size:13px;">Delivered</p>
+    <h2 style="color:#2ecc71;font-size:28px;">{{ delivered_orders }}</h2>
+  </div>
+
+</div>
+
       <div class="dash-table-card">
         {% if orders %}
         <table class="dash-table">
