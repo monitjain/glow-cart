@@ -17,3 +17,18 @@ venv/
 .DS_Store
 Thumbs.db
 .env
+# Local database and backups
+db.sqlite3
+db_backup_*.sqlite3
+
+# Environment secrets
+.env
+.env.*
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local virtual environment
+venv/
+.venv/
