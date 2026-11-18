@@ -32,11 +32,13 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
 
     STATUS_CHOICES = [
-        ('Pending',   'Pending'),
-        ('Confirmed', 'Confirmed'),
-        ('Shipped',   'Shipped'),
-        ('Delivered', 'Delivered'),
-    ]
+    ('Pending',          'Pending'),
+    ('Confirmed',        'Confirmed'),
+    ('Accepted',         'Accepted'),
+    ('Pickup Scheduled', 'Pickup Scheduled'),
+    ('Shipped',          'Shipped'),
+    ('Delivered',        'Delivered'),
+]
 
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True)
     name        = models.CharField(max_length=100)
@@ -49,7 +51,7 @@ class Order(models.Model):
     email       = models.EmailField(blank=True, default='')
     items       = models.TextField()
     total       = models.IntegerField()
-    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     tracking_id = models.CharField(max_length=100, blank=True, default='')
     shiprocket_order_id    = models.CharField(max_length=100, blank=True, default='')
     shiprocket_shipment_id = models.CharField(max_length=100, blank=True, default='')

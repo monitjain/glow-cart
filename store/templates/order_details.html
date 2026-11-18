@@ -1,0 +1,305 @@
+
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order #{{ order.id }} — Glow Cart</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+    <style>
+        body { background: #0d1b2a; }
+
+        .details-layout {
+            min-height: 100vh;
+            padding: 105px 5% 60px;
+        }
+
+        .details-container { max-width: 1150px; margin: auto; }
+
+        .top-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-bottom: 30px;
+        }
+
+        .top-row h1 {
+            font-family: 'Playfair Display', serif;
+            color: #fff;
+            font-size: 30px;
+        }
+
+        .back-btn {
+            color: var(--gold);
+            text-decoration: none;
+            border: 1px solid var(--gold);
+            padding: 9px 17px;
+            border-radius: 25px;
+            font-size: 13px;
+        }
+
+        .details-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 22px;
+        }
+
+        .detail-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 25px;
+            margin-bottom: 22px;
+            min-width: 0;
+        }
+
+        .detail-card h2 {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            font-size: 13px;
+        }
+
+        .info-row:last-child { border-bottom: none; }
+
+        .info-label { color: var(--text-muted); }
+        .info-value { color: var(--text); text-align: right; overflow-wrap: anywhere; }
+
+        .product-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            padding: 13px 0;
+            border-bottom: 1px solid rgba(255,255,255,.06);
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            background: rgba(77,182,172,.15);
+            color: var(--teal);
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            padding-top: 18px;
+            margin-top: 12px;
+            border-top: 1px solid var(--border);
+            font-size: 17px;
+            font-weight: 600;
+            color: var(--gold);
+        }
+
+        .timeline {
+            display: flex;
+            flex-direction: column;
+            gap: 17px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .timeline-dot {
+            width: 11px;
+            height: 11px;
+            border-radius: 50%;
+            background: var(--border);
+            flex-shrink: 0;
+        }
+
+        .timeline-item.active { color: var(--gold); }
+        .timeline-item.active .timeline-dot { background: var(--gold); }
+
+        @media(max-width:750px) {
+            .details-grid { grid-template-columns: 1fr; }
+            .details-layout { padding: 90px 16px 40px; }
+            .top-row h1 { font-size: 24px; }
+            .detail-card { padding: 18px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="details-layout">
+    <div class="details-container">
+
+        <div class="top-row">
+            <div>
+                <h1>Order #{{ order.id }}</h1>
+                <p style="color:var(--text-muted);font-size:13px;margin-top:6px;">
+                    Complete order information
+                </p>
+            </div>
+
+            <a href="{% url 'manage_orders' %}" class="back-btn">
+                ← Back to Orders
+            </a>
+        </div>
+
+        <div class="details-grid">
+
+            <div>
+
+                <!-- Customer Information -->
+                <div class="detail-card">
+                    <h2>Customer Information</h2>
+
+                    <div class="info-row">
+                        <span class="info-label">Customer</span>
+                        <span class="info-value">{{ order.name }}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Username</span>
+                        <span class="info-value">{{ order.user.username|default:"Guest" }}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Phone</span>
+                        <span class="info-value">{{ order.phone }}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Email</span>
+                        <span class="info-value">{{ order.email|default:"Not provided" }}</span>
+                    </div>
+                </div>
+
+                <!-- Delivery Address -->
+                <div class="detail-card">
+                    <h2>Delivery Address</h2>
+
+                    <p style="color:var(--text);font-size:14px;line-height:2;">
+                        {{ order.name }}<br>
+                        {{ order.street|default:order.address }}<br>
+                        {{ order.city }}{% if order.city and order.state %}, {% endif %}{{ order.state }}<br>
+                        PIN: {{ order.pincode|default:"Not available" }}
+                    </p>
+                </div>
+
+                <!-- Products -->
+                <div class="detail-card">
+                    <h2>Ordered Products</h2>
+
+                    {% for item in order_items %}
+                    <div class="product-row">
+                        <div>
+                            <strong>{{ item.name|default:"Product" }}</strong>
+                            <p style="color:var(--text-muted);margin-top:5px;">
+                                Quantity: {{ item.qty|default:1 }}
+                            </p>
+                        </div>
+
+                        <strong>₹{{ item.price|default:"0" }}</strong>
+                    </div>
+                    {% empty %}
+                    <p style="color:var(--text-muted);font-size:13px;">
+                        No product details available.
+                    </p>
+                    {% endfor %}
+
+                    <div class="total-row">
+                        <span>Total Amount</span>
+                        <span>₹{{ order.total }}</span>
+                    </div>
+                </div>
+
+            </div>
+
+            <div>
+
+                <!-- Order Summary -->
+                <div class="detail-card">
+                    <h2>Order Summary</h2>
+
+                    <div class="info-row">
+                        <span class="info-label">Order ID</span>
+                        <span class="info-value">#{{ order.id }}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Order Date</span>
+                        <span class="info-value">
+                            {{ order.created_at|date:"d M Y, h:i A"|default:"Not available" }}
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Current Status</span>
+                        <span class="info-value">
+                            <span class="badge">{{ order.status }}</span>
+                        </span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Tracking ID</span>
+                        <span class="info-value">{{ order.tracking_id|default:"Not assigned" }}</span>
+                    </div>
+
+                    <div class="info-row">
+                        <span class="info-label">Total</span>
+                        <span class="info-value">₹{{ order.total }}</span>
+                    </div>
+                </div>
+
+                <!-- Order Timeline -->
+                <div class="detail-card">
+                    <h2>Order Timeline</h2>
+
+                    <div class="timeline">
+                        <div class="timeline-item active">
+                            <span class="timeline-dot"></span>
+                            Order Placed
+                        </div>
+
+                        <div class="timeline-item {% if order.status == 'Confirmed' or order.status == 'Accepted' or order.status == 'Pickup Scheduled' or order.status == 'Shipped' or order.status == 'Delivered' %}active{% endif %}">
+                            <span class="timeline-dot"></span>
+                            Order Confirmed
+                        </div>
+
+                        <div class="timeline-item {% if order.status == 'Shipped' or order.status == 'Delivered' %}active{% endif %}">
+                            <span class="timeline-dot"></span>
+                            Shipped
+                        </div>
+
+                        <div class="timeline-item {% if order.status == 'Delivered' %}active{% endif %}">
+                            <span class="timeline-dot"></span>
+                            Delivered
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

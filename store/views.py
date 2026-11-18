@@ -443,6 +443,23 @@ def manage_orders(request):
         'delivered_orders': delivered_orders,
     })
 
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def order_details(request, order_id):
+    order = get_object_or_404(
+        Order.objects.select_related('user'),
+        id=order_id
+    )
+
+    try:
+        order_items = json.loads(order.items)
+    except (ValueError, TypeError):
+        order_items = []
+
+    return render(request, 'order_details.html', {
+        'order': order,
+        'order_items': order_items,
+    })
+
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
 def update_order_status(request, order_id):

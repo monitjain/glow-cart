@@ -113,7 +113,12 @@
           <tbody>
             {% for order in orders %}
             <tr>
-              <td>#{{ order.id }}</td>
+              <td>
+    <a href="{% url 'order_details' order.id %}"
+       style="color:var(--teal);font-weight:700;text-decoration:none;">
+        #{{ order.id }} ↗
+    </a>
+</td>
               <td>{{ order.user.username|default:"Guest" }}</td>
               <td>{{ order.name }}</td>
               <td>{{ order.phone }}</td>
@@ -147,7 +152,7 @@
                 {% endif %}
               </td>
             </tr>
-            {% endfor %}
+{% endfor %}
           </tbody>
         </table>
         {% else %}
