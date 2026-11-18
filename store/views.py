@@ -1,7 +1,5 @@
 import json
-import os
 import logging
-import requests as http_requests
 from datetime import timedelta
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login
@@ -16,87 +14,6 @@ from .models import Product, Order, SiteVisitor, ReturnRequest, Review
 
 
 logger = logging.getLogger(__name__)
-SHIPROCKET_EMAIL = os.getenv('SHIPROCKET_EMAIL', '')
-SHIPROCKET_PASSWORD = os.getenv('SHIPROCKET_PASSWORD', '')
-SHIPROCKET_API = 'https://apiv2.shiprocket.in/v1/external'
-
-def shiprocket_token():
-    """Get fresh Shiprocket auth token."""
-    try:
-        r = http_requests.post(
-            f'{SHIPROCKET_API}/auth/login',
-            json={'email': SHIPROCKET_EMAIL, 'password': SHIPROCKET_PASSWORD},
-            timeout=10
-        )
-        return r.json().get('token', '')
-    except Exception as e:
-        logger.error('Shiprocket login failed: %s', str(e))
-        return ''
-
-
-def create_shiprocket_order(order):
-    """Create order on Shiprocket automatically when customer places order."""
-    token = shiprocket_token()
-    if not token:
-        return
-
-    try:
-        parsed_items = json.loads(order.items)
-    except (ValueError, TypeError):
-        parsed_items = []
-
-    order_items = [{
-        'name':     i.get('name', 'Product'),
-        'sku':      f"SKU-{order.id}-{idx}",
-        'units':    i.get('qty', 1),
-        'selling_price': i.get('price', 0),
-    } for idx, i in enumerate(parsed_items)]
-
-    payload = {
-        'order_id':          str(order.id),
-        'order_date':        order.id and __import__('datetime').datetime.now().strftime('%Y-%m-%d %H:%M'),
-        'pickup_location':   'Primary',
-        'channel_id':        '',
-        'billing_customer_name':  order.name,
-        'billing_last_name':      '',
-        'billing_address':        order.street or order.address,
-        'billing_city':           order.city or 'City',
-        'billing_pincode':        order.pincode or '000000',
-        'billing_state':          order.state or 'State',
-        'billing_country':        'India',
-        'billing_email':          order.email or 'customer@glowcart.com',
-        'billing_phone':          order.phone,
-        'shipping_is_billing':    True,
-        'order_items':            order_items,
-        'payment_method':         'COD',
-        'sub_total':              order.total,
-        'length':                 10,
-        'breadth':                10,
-        'height':                 10,
-        'weight':                 0.5,
-    }
-
-    try:
-        r = http_requests.post(
-            f'{SHIPROCKET_API}/orders/create/adhoc',
-            json=payload,
-            headers={'Authorization': f'Bearer {token}'},
-            timeout=15
-        )
-        data = r.json()
-        sr_order_id    = str(data.get('order_id', ''))
-        sr_shipment_id = str(data.get('shipment_id', ''))
-        if sr_order_id:
-            order.shiprocket_order_id    = sr_order_id
-            order.shiprocket_shipment_id = sr_shipment_id
-            order.save(update_fields=['shiprocket_order_id', 'shiprocket_shipment_id'])
-            logger.info('Shiprocket order created: %s for order #%s', sr_order_id, order.id)
-        else:
-            logger.error('Shiprocket order creation failed: %s', data)
-    except Exception as e:
-        logger.error('Shiprocket API error: %s', str(e))
-
-
 # ── Email helper ──────────────────────────────────────────────
 def send_order_email(order, recipient, event='confirmed', tracking_id=''):
     """Send order status email. event: confirmed | pending | shipped | delivered"""
@@ -272,9 +189,6 @@ def checkout(request):
         if recipient:
             send_order_email(order, recipient, event='confirmed')
 
-        # Auto-create shipment on Shiprocket
-        create_shiprocket_order(order)
-
         return redirect('/review/order/')
 
     return render(request, 'checkout.html', {
@@ -391,15 +305,6 @@ def live_visitors_api(request):
     for v in visitors:
         v['last_seen'] = v['last_seen'].strftime('%H:%M:%S')
     return JsonResponse({'count': len(visitors), 'visitors': visitors})
-
-
-@user_passes_test(lambda u: u.is_staff, login_url='/login/')
-def push_to_shiprocket(request, order_id):
-    """Manually push an existing order to Shiprocket from dashboard."""
-    order = get_object_or_404(Order, id=order_id)
-    create_shiprocket_order(order)
-    return redirect('manage_orders')
-
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')

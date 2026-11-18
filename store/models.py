@@ -51,11 +51,8 @@ class Order(models.Model):
     email       = models.EmailField(blank=True, default='')
     items       = models.TextField()
     total       = models.IntegerField()
-    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+    status      = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Confirmed')
     tracking_id = models.CharField(max_length=100, blank=True, default='')
-    shiprocket_order_id    = models.CharField(max_length=100, blank=True, default='')
-    shiprocket_shipment_id = models.CharField(max_length=100, blank=True, default='')
-
     def __str__(self):
         return f"Order #{self.id} — {self.name}"
 
