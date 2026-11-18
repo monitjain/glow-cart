@@ -265,7 +265,8 @@ def checkout(request):
             phone=phone,
             email=email,
             items=items,
-            total=int(float(total))
+            total=int(float(total)),
+            status='Confirmed'
         )
 
         recipient = request.user.email or email
