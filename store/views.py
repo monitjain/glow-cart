@@ -1,4 +1,5 @@
 import json
+import os
 import logging
 import requests as http_requests
 from datetime import timedelta
@@ -15,11 +16,9 @@ from .models import Product, Order, SiteVisitor, ReturnRequest, Review
 
 
 logger = logging.getLogger(__name__)
-
-SHIPROCKET_EMAIL    = 'monitjain72@gmail.com'
-SHIPROCKET_PASSWORD = '0BrJUFzXbw^a#k*tFWwN6oc8IoNjRvFj'
-SHIPROCKET_API      = 'https://apiv2.shiprocket.in/v1/external'
-
+SHIPROCKET_EMAIL = os.getenv('SHIPROCKET_EMAIL', '')
+SHIPROCKET_PASSWORD = os.getenv('SHIPROCKET_PASSWORD', '')
+SHIPROCKET_API = 'https://apiv2.shiprocket.in/v1/external'
 
 def shiprocket_token():
     """Get fresh Shiprocket auth token."""
