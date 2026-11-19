@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,18 +9,30 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
+
 <body>
   <nav class="navbar scrolled" id="navbar">
     <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+
     <div class="nav-links" id="nav-links">
       <a href="/">Home</a>
+
       <a href="/cart/" class="nav-cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:4px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:4px">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
         Cart (<span id="cart-count">0</span>)
       </a>
+
       {% if user.is_authenticated %}
         <a href="/orders/">My Orders</a>
-        {% if user.is_staff %}<a href="/dashboard/">Dashboard</a>{% endif %}
+
+        {% if user.is_staff %}
+          <a href="/dashboard/">Dashboard</a>
+        {% endif %}
+
         <form method="POST" action="/logout/" style="display:inline;">
           {% csrf_token %}
           <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
@@ -29,44 +42,102 @@
         <a href="/signup/" class="btn-gold-nav">Sign Up</a>
       {% endif %}
     </div>
+
     <button class="hamburger" id="hamburger">&#9776;</button>
   </nav>
 
   <div class="product-container">
+
     <div class="product-img">
-      <img src="{{ product.image.url }}" alt="{{ product.name|escapejs }}"
-           id="product-img" style="max-width:100%;height:auto;"
-           onerror="this.src='/static/images/placeholder.jpg'">
+      {% if product.image %}
+        <img
+          src="{{ product.image.url }}"
+          alt="{{ product.name|escapejs }}"
+          id="product-img"
+          onerror="this.onerror=null;this.src='https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable';"
+        >
+      {% else %}
+        <img
+          src="https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable"
+          alt="{{ product.name|escapejs }}"
+          id="product-img"
+        >
+      {% endif %}
     </div>
+
     <div class="product-details">
-      <p class="product-breadcrumb"><a href="/">Home</a> › {{ product.name }}</p>
+
+      <p class="product-breadcrumb">
+        <a href="/">Home</a> › {{ product.name }}
+      </p>
+
       <h2>{{ product.name }}</h2>
+
       <p class="price">₹{{ product.price }}</p>
-      <div class="product-rating">★★★★☆ <span>4.0 / 5</span></div>
+
+      <div class="product-rating">
+        ★★★★☆ <span>4.0 / 5</span>
+      </div>
+
       {% if product.stock is None %}
-  <p class="stock-badge">✔ Availability on request</p>
-{% elif product.stock > 0 %}
-  <p class="stock-badge">✔ In Stock ({{ product.stock }} available)</p>
-{% else %}
-  <p class="stock-badge">✖ Out of Stock</p>
-{% endif %}
+        <p class="stock-badge">Availability on Request</p>
+      {% elif product.stock > 0 %}
+        <p class="stock-badge">In Stock ({{ product.stock }} available)</p>
+      {% else %}
+        <p class="stock-badge">Out of Stock</p>
+      {% endif %}
+
       {% if product.description %}
         <p class="desc">{{ product.description }}</p>
       {% endif %}
+
       <div class="product-actions">
-        <button class="btn cart-btn"
-          data-name="{{ product.name|escapejs }}"
-          data-price="{{ product.price|default:'0' }}"
-          onclick="handleCart(this)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="vertical-align:middle;margin-right:6px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-          Add to Cart
-        </button>
-        <button class="btn buy-btn"
-          data-name="{{ product.name|escapejs }}"
-          data-price="{{ product.price|default:'0' }}"
-          onclick="buyNow(this)">
-          Buy Now ⚡
-        </button>
+
+        {% if product.stock is not None and product.stock > 0 %}
+
+          <button
+            class="btn cart-btn"
+            data-product-id="{{ product.id }}"
+            data-name="{{ product.name|escapejs }}"
+            data-price="{{ product.price }}"
+            data-stock="{{ product.stock }}"
+            onclick="handleCart(this)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16" style="vertical-align:middle;margin-right:6px">
+              <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+              <line x1="3" y1="6" x2="21" y2="6"/>
+              <path d="M16 10a4 4 0 01-8 0"/>
+            </svg>
+            Add to Cart
+          </button>
+
+          <button
+            class="btn buy-btn"
+            data-product-id="{{ product.id }}"
+            data-name="{{ product.name|escapejs }}"
+            data-price="{{ product.price }}"
+            data-stock="{{ product.stock }}"
+            onclick="buyNow(this)"
+          >
+            Buy Now ⚡
+          </button>
+
+        {% else %}
+
+          <button class="btn cart-btn" disabled>
+            {% if product.stock is None %}
+              Availability on Request
+            {% else %}
+              Out of Stock
+            {% endif %}
+          </button>
+
+          <button class="btn buy-btn" disabled>
+            Not Available
+          </button>
+
+        {% endif %}
+
       </div>
     </div>
   </div>
@@ -74,34 +145,132 @@
   <div class="toast" id="toast">✓ Added to cart!</div>
 
   <script>
-    function getCart() { return JSON.parse(localStorage.getItem("cart")) || []; }
-    function updateCount() { document.getElementById("cart-count").innerText = getCart().length; }
+    function getCart() {
+      try {
+        const cart = JSON.parse(localStorage.getItem("cart"));
+        return Array.isArray(cart) ? cart : [];
+      } catch (error) {
+        return [];
+      }
+    }
 
-    function handleCart(btn) {
-      let cart = getCart();
-      cart.push({ name: btn.getAttribute("data-name"), price: btn.getAttribute("data-price") });
+    function saveCart(cart) {
       localStorage.setItem("cart", JSON.stringify(cart));
       updateCount();
-      let t = document.getElementById("toast");
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2500);
-      btn.innerText = "Added ✓";
-      setTimeout(() => { btn.innerText = "Add to Cart 🛒"; }, 1500);
+    }
+
+    function updateCount() {
+      const cart = getCart();
+
+      const count = cart.reduce((total, item) => {
+        return total + Math.max(0, Number(item.qty) || 0);
+      }, 0);
+
+      document.getElementById("cart-count").innerText = count;
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+
+      setTimeout(() => {
+        toast.classList.remove("show");
+      }, 2500);
+    }
+
+    function getProductData(btn) {
+      return {
+        id: Number(btn.dataset.productId),
+        name: btn.dataset.name,
+        price: Number(btn.dataset.price),
+        stock: Number(btn.dataset.stock)
+      };
+    }
+
+    function handleCart(btn) {
+      if (btn.disabled) return;
+
+      const product = getProductData(btn);
+
+      if (!product.id || !Number.isFinite(product.stock) || product.stock <= 0) {
+        alert("This product is currently unavailable.");
+        return;
+      }
+
+      const cart = getCart();
+      const existingItem = cart.find(item => Number(item.id) === product.id);
+
+      if (existingItem) {
+        const currentQty = Number(existingItem.qty) || 1;
+
+        if (currentQty >= product.stock) {
+          showToast("Maximum available stock reached.");
+          return;
+        }
+
+        existingItem.qty = currentQty + 1;
+        existingItem.stock = product.stock;
+        existingItem.name = product.name;
+        existingItem.price = product.price;
+      } else {
+        cart.push({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          qty: 1,
+          stock: product.stock
+        });
+      }
+
+      saveCart(cart);
+      showToast("✓ Added to cart!");
+
+      const originalHTML = btn.innerHTML;
+      btn.textContent = "Added ✓";
+
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+      }, 1500);
     }
 
     function buyNow(btn) {
-      localStorage.setItem("cart", JSON.stringify([{ name: btn.getAttribute("data-name"), price: btn.getAttribute("data-price") }]));
+      if (btn.disabled) return;
+
+      const product = getProductData(btn);
+
+      if (!product.id || !Number.isFinite(product.stock) || product.stock <= 0) {
+        alert("This product is currently unavailable.");
+        return;
+      }
+
+      const cart = [{
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        qty: 1,
+        stock: product.stock
+      }];
+
+      saveCart(cart);
       window.location.href = "/checkout/";
     }
 
     updateCount();
+
     window.addEventListener("pageshow", updateCount);
+
     window.addEventListener("scroll", () => {
-      document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 60);
+      document.getElementById("navbar").classList.toggle(
+        "scrolled",
+        window.scrollY > 60
+      );
     });
+
     document.getElementById("hamburger").addEventListener("click", () => {
       document.getElementById("nav-links").classList.toggle("open");
     });
   </script>
+
 </body>
 </html>

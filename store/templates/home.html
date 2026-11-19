@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -8,9 +9,31 @@
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    .stock-card-badge {
+      display: inline-block;
+      margin-bottom: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #e74c3c;
+    }
+
+    .stock-card-badge.available {
+      color: #2ecc71;
+    }
+
+    .quick-add:disabled,
+    .add-to-cart-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+  </style>
 </head>
+
 <body>
-  <!-- PAGE LOADER -->
+
   <div id="page-loader">
     <div class="loader-content">
       <h1 class="loader-brand">✨ Glow Cart</h1>
@@ -19,20 +42,30 @@
     </div>
   </div>
 
-  <!-- NAVBAR -->
   <nav class="navbar" id="navbar">
     <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+
     <div class="nav-links" id="nav-links">
       <a href="/">Home</a>
       <a href="#offers">Offers</a>
+
       <a href="/cart/" class="nav-cart">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:4px"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:4px">
+          <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+          <line x1="3" y1="6" x2="21" y2="6"/>
+          <path d="M16 10a4 4 0 01-8 0"/>
+        </svg>
         Cart (<span id="cart-count">0</span>)
       </a>
+
       {% if user.is_authenticated %}
         <a href="/orders/">My Orders</a>
         <a href="/my-dashboard/">My Dashboard</a>
-        {% if user.is_staff %}<a href="/dashboard/">Dashboard</a>{% endif %}
+
+        {% if user.is_staff %}
+          <a href="/dashboard/">Dashboard</a>
+        {% endif %}
+
         <form method="POST" action="/logout/" style="display:inline;">
           {% csrf_token %}
           <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
@@ -42,10 +75,10 @@
         <a href="/signup/" class="btn-gold-nav">Sign Up</a>
       {% endif %}
     </div>
+
     <button class="hamburger" id="hamburger">&#9776;</button>
   </nav>
 
-  <!-- HERO -->
   <section class="hero-section">
     <div class="swiper hero-swiper">
       <div class="swiper-wrapper">
@@ -87,91 +120,149 @@
         </div>
 
       </div>
+
       <div class="swiper-pagination hero-pagination"></div>
       <div class="swiper-button-prev"></div>
       <div class="swiper-button-next"></div>
     </div>
   </section>
 
-  <!-- TRUST BAR -->
   <div class="trust-bar">
     <div class="trust-item">
       <span class="trust-icon">🚚</span>
       <div><strong>Free Delivery</strong><span>On orders above ₹999</span></div>
     </div>
+
     <div class="trust-item">
       <span class="trust-icon">🔒</span>
       <div><strong>Secure Checkout</strong><span>100% safe &amp; encrypted</span></div>
     </div>
+
     <div class="trust-item">
       <span class="trust-icon">💰</span>
       <div><strong>Cash on Delivery</strong><span>Pay when you receive</span></div>
     </div>
+
     <div class="trust-item">
       <span class="trust-icon">⭐</span>
       <div><strong>Premium Quality</strong><span>Curated top products</span></div>
     </div>
   </div>
 
-  <!-- STATS BAR -->
   <div class="stats-bar">
     <div class="stat"><span class="stat-num">1K+</span><span class="stat-label">Happy Customers</span></div>
     <div class="stat"><span class="stat-num">4.9 ★</span><span class="stat-label">Avg Rating</span></div>
     <div class="stat"><span class="stat-num">Free</span><span class="stat-label">Shipping ₹999+</span></div>
   </div>
 
-  <!-- FEATURED PRODUCTS -->
   <section class="section" id="products">
     <div class="section-header reveal">
       <p class="section-tag">Hand Picked</p>
       <h2 class="section-title">Featured <span class="gold">Products</span></h2>
     </div>
+
     <div class="products-grid">
       {% for product in products %}
       <div class="product-card reveal">
+
         <div class="card-img-wrap">
           <a href="/product/{{ product.id }}/">
             {% if product.image %}
-            <img src="{{ product.image.url }}" alt="{{ product.name|escapejs }}" loading="lazy" onerror="this.src='https://placehold.co/400x300/162030/D4AF37?text=No+Image'">
+              <img
+                src="{{ product.image.url }}"
+                alt="{{ product.name|escapejs }}"
+                loading="lazy"
+                onerror="this.onerror=null;this.src='https://placehold.co/400x300/162030/D4AF37?text=No+Image'"
+              >
             {% else %}
-            <img src="https://placehold.co/400x300/162030/D4AF37?text=No+Image" alt="{{ product.name|escapejs }}">
+              <img
+                src="https://placehold.co/400x300/162030/D4AF37?text=No+Image"
+                alt="{{ product.name|escapejs }}"
+              >
             {% endif %}
           </a>
+
           <div class="card-overlay">
-            <button class="quick-add"
-              data-name="{{ product.name|escapejs }}"
-              data-price="{{ product.price|default:'0' }}"
-              onclick="handleCart(this)">
-              + Quick Add
-            </button>
+            {% if product.stock is not None and product.stock > 0 %}
+              <button
+                class="quick-add"
+                data-product-id="{{ product.id }}"
+                data-name="{{ product.name|escapejs }}"
+                data-price="{{ product.price|default:'0' }}"
+                data-stock="{{ product.stock }}"
+                onclick="handleCart(this)"
+              >
+                + Quick Add
+              </button>
+            {% else %}
+              <button class="quick-add" disabled>
+                {% if product.stock is None %}
+                  Availability on Request
+                {% else %}
+                  Out of Stock
+                {% endif %}
+              </button>
+            {% endif %}
           </div>
         </div>
+
         <div class="card-body">
           <a href="/product/{{ product.id }}/" class="card-name">{{ product.name }}</a>
+
           <div class="card-footer-row">
             <span class="card-price">₹{{ product.price }}</span>
           </div>
-          <button class="add-to-cart-btn"
-            data-name="{{ product.name|escapejs }}"
-            data-price="{{ product.price|default:'0' }}"
-            onclick="handleCart(this)">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
-            Add to Cart
-          </button>
+
+          {% if product.stock is None %}
+            <span class="stock-card-badge">Availability on Request</span>
+          {% elif product.stock > 0 %}
+            <span class="stock-card-badge available">
+              ✓ In Stock ({{ product.stock }})
+            </span>
+          {% else %}
+            <span class="stock-card-badge">✖ Out of Stock</span>
+          {% endif %}
+
+          {% if product.stock is not None and product.stock > 0 %}
+            <button
+              class="add-to-cart-btn"
+              data-product-id="{{ product.id }}"
+              data-name="{{ product.name|escapejs }}"
+              data-price="{{ product.price|default:'0' }}"
+              data-stock="{{ product.stock }}"
+              onclick="handleCart(this)"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="16" height="16">
+                <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+                <line x1="3" y1="6" x2="21" y2="6"/>
+                <path d="M16 10a4 4 0 01-8 0"/>
+              </svg>
+              Add to Cart
+            </button>
+          {% else %}
+            <button class="add-to-cart-btn" disabled>
+              {% if product.stock is None %}
+                Availability on Request
+              {% else %}
+                Out of Stock
+              {% endif %}
+            </button>
+          {% endif %}
         </div>
+
       </div>
       {% empty %}
-      <p class="empty-msg">No products yet. Add some from the admin panel.</p>
+        <p class="empty-msg">No products yet. Add some from the admin panel.</p>
       {% endfor %}
     </div>
   </section>
 
-  <!-- SPECIAL OFFERS -->
   <section class="section offers-section" id="offers">
     <div class="section-header reveal">
       <p class="section-tag">This Week</p>
       <h2 class="section-title">Special <span class="gold">Offers</span></h2>
     </div>
+
     <div class="offers-grid reveal">
       <div class="offer-card offer-big">
         <p class="offer-tag">🔥 Flash Sale</p>
@@ -179,12 +270,14 @@
         <p class="offer-desc">On all Tech &amp; Accessories</p>
         <a href="#products" class="btn-gold">Grab Deal →</a>
       </div>
+
       <div class="offer-card">
         <p class="offer-tag">⚡ Today Only</p>
         <h3>Free <span class="teal">Shipping</span></h3>
         <p class="offer-desc">On orders above ₹999</p>
         <a href="#products" class="btn-outline">Shop Now</a>
       </div>
+
       <div class="offer-card">
         <p class="offer-tag">🎁 First Order</p>
         <h3><span class="gold">10% Off</span></h3>
@@ -194,14 +287,12 @@
     </div>
   </section>
 
-  <!-- TESTIMONIALS -->
   <section class="section testimonials-section">
     <div class="section-header reveal">
       <p class="section-tag">What They Say</p>
       <h2 class="section-title">Customer <span class="gold">Reviews</span></h2>
     </div>
 
-    <!-- Live reviews from database -->
     <div class="swiper testimonial-swiper reveal" id="reviews-swiper">
       <div class="swiper-wrapper" id="reviews-wrapper">
         <div class="swiper-slide">
@@ -213,15 +304,19 @@
       <div class="swiper-pagination testimonial-pagination"></div>
     </div>
 
-    <!-- Write a review -->
     {% if user.is_authenticated %}
     <div class="reveal" style="max-width:560px;margin:40px auto 0;">
       <div style="background:var(--card-bg);border:1px solid var(--border);border-radius:var(--radius);padding:28px 32px;">
         <h3 style="font-family:'Playfair Display',serif;font-size:20px;color:var(--gold);margin-bottom:20px;">✍️ Write a Review</h3>
+
         <form method="POST" action="/review/submit/">
           {% csrf_token %}
+
           <div style="margin-bottom:16px;">
-            <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Rating</label>
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">
+              Rating
+            </label>
+
             <div style="display:flex;gap:8px;" id="star-container">
               {% for i in "12345" %}
               <label style="cursor:pointer;font-size:28px;color:var(--border);transition:color 0.2s;" class="star-label">
@@ -231,10 +326,14 @@
               {% endfor %}
             </div>
           </div>
+
           <div style="margin-bottom:16px;">
-            <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">Your Review</label>
+            <label style="font-size:12px;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;display:block;margin-bottom:8px;">
+              Your Review
+            </label>
             <textarea name="comment" placeholder="Share your experience with Glow Cart..." required style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);resize:vertical;min-height:100px;"></textarea>
           </div>
+
           <button type="submit" class="btn-gold" style="width:100%;">Submit Review →</button>
         </form>
       </div>
@@ -246,24 +345,36 @@
     {% endif %}
   </section>
 
-  <!-- FOOTER -->
   <footer class="footer">
     <div class="footer-top">
+
       <div class="footer-brand">
         <h2 class="logo">Glow Cart <span class="logo-star">✦</span></h2>
         <p>Premium products. Luxury experience.<br>Delivered to your door.</p>
+
         <div class="social-links">
           <a href="#" aria-label="Instagram">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20">
+              <rect x="2" y="2" width="20" height="20" rx="5"/>
+              <circle cx="12" cy="12" r="4"/>
+              <circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/>
+            </svg>
           </a>
+
           <a href="#" aria-label="Twitter">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"/>
+            </svg>
           </a>
+
           <a href="#" aria-label="Facebook">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+            </svg>
           </a>
         </div>
       </div>
+
       <div class="footer-links">
         <h4>Quick Links</h4>
         <a href="/">Home</a>
@@ -271,6 +382,7 @@
         <a href="#offers">Offers</a>
         <a href="/faq/">FAQ</a>
       </div>
+
       <div class="footer-links">
         <h4>Account</h4>
         <a href="/login/">Login</a>
@@ -278,13 +390,15 @@
         <a href="/orders/">My Orders</a>
         <a href="/cart/">Cart</a>
       </div>
+
       <div class="footer-links">
         <h4>Policies</h4>
         <a href="/policy/">Return Policy</a>
         <a href="/policy/#exchange">Exchange Policy</a>
         <a href="/policy/#refund">Refund Policy</a>
-        <a href="/faq/">Help & FAQ</a>
+        <a href="/faq/">Help &amp; FAQ</a>
       </div>
+
       <div class="footer-newsletter">
         <h4>Newsletter</h4>
         <p>Get exclusive deals in your inbox.</p>
@@ -294,9 +408,12 @@
         </form>
         <p class="newsletter-msg" id="newsletter-msg"></p>
       </div>
+
     </div>
+
     <div class="footer-bottom">
       <p>© 2026 Glow Cart. All rights reserved.</p>
+
       <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;">
         <a href="/policy/" style="color:var(--text-muted);font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-muted)'">Return Policy</a>
         <a href="/faq/" style="color:var(--text-muted);font-size:13px;transition:color 0.2s;" onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--text-muted)'">FAQ</a>
@@ -305,112 +422,316 @@
     </div>
   </footer>
 
-  <!-- TOAST -->
   <div class="toast" id="toast">✓ Added to cart!</div>
 
   <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+
   <script>
-    // Cart
-    function getCart() { return JSON.parse(localStorage.getItem("cart")) || []; }
-    function updateCount() { document.getElementById("cart-count").innerText = getCart().length; }
+    // Cart helpers
+
+    function getCart() {
+      try {
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        return Array.isArray(cart) ? cart : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function updateCount() {
+      const count = getCart().reduce((total, item) => {
+        return total + Math.max(1, Number(item.qty) || 1);
+      }, 0);
+
+      const countElement = document.getElementById("cart-count");
+
+      if (countElement) {
+        countElement.innerText = count;
+      }
+    }
+
+    // Add product to cart with ID, price and stock
 
     function handleCart(btn) {
-      let cart = getCart();
-      cart.push({ name: btn.getAttribute("data-name"), price: btn.getAttribute("data-price") });
+      if (btn.disabled) return;
+
+      const productId = Number(btn.getAttribute("data-product-id"));
+      const name = btn.getAttribute("data-name") || "Product";
+      const price = Number(btn.getAttribute("data-price")) || 0;
+      const stockValue = btn.getAttribute("data-stock");
+
+      const stock = stockValue === null || stockValue.trim() === ""
+        ? null
+        : Number(stockValue);
+
+      if (!Number.isInteger(productId) || productId <= 0) {
+        alert("Unable to identify this product. Please refresh the page.");
+        return;
+      }
+
+      if (stock === null || !Number.isFinite(stock) || stock <= 0) {
+        alert("This product is currently unavailable.");
+        return;
+      }
+
+      const cart = getCart();
+
+      const existingItem = cart.find(item => Number(item.id) === productId);
+
+      if (existingItem) {
+        const currentQty = Math.max(1, Number(existingItem.qty) || 1);
+
+        if (currentQty >= stock) {
+          alert("Maximum available stock reached.");
+          return;
+        }
+
+        existingItem.qty = currentQty + 1;
+        existingItem.name = name;
+        existingItem.price = price;
+        existingItem.stock = stock;
+      } else {
+        cart.push({
+          id: productId,
+          name: name,
+          price: price,
+          qty: 1,
+          stock: stock
+        });
+      }
+
       localStorage.setItem("cart", JSON.stringify(cart));
+
       updateCount();
-      let t = document.getElementById("toast");
-      t.classList.add("show");
-      setTimeout(() => t.classList.remove("show"), 2500);
-      let orig = btn.innerHTML;
+
+      const toast = document.getElementById("toast");
+
+      if (toast) {
+        toast.classList.add("show");
+        setTimeout(() => toast.classList.remove("show"), 2500);
+      }
+
+      const originalHTML = btn.innerHTML;
+
       btn.innerHTML = "✓ Added!";
       btn.style.background = "#2ecc71";
-      setTimeout(() => { btn.innerHTML = orig; btn.style.background = ""; }, 1500);
+
+      setTimeout(() => {
+        btn.innerHTML = originalHTML;
+        btn.style.background = "";
+      }, 1500);
     }
 
     updateCount();
     window.addEventListener("pageshow", updateCount);
 
-    // Sticky navbar blur
+    // Sticky navbar
+
     window.addEventListener("scroll", () => {
-      document.getElementById("navbar").classList.toggle("scrolled", window.scrollY > 60);
+      document.getElementById("navbar").classList.toggle(
+        "scrolled",
+        window.scrollY > 60
+      );
     });
 
-    // Hamburger
+    // Hamburger menu
+
     document.getElementById("hamburger").addEventListener("click", () => {
       document.getElementById("nav-links").classList.toggle("open");
     });
 
     // Hero Swiper
+
     new Swiper(".hero-swiper", {
       loop: true,
-      autoplay: { delay: 5000, disableOnInteraction: false },
-      pagination: { el: ".hero-pagination", clickable: true },
-      navigation: { nextEl: ".hero-swiper .swiper-button-next", prevEl: ".hero-swiper .swiper-button-prev" },
+      autoplay: {
+        delay: 5000,
+        disableOnInteraction: false
+      },
+      pagination: {
+        el: ".hero-pagination",
+        clickable: true
+      },
+      navigation: {
+        nextEl: ".hero-swiper .swiper-button-next",
+        prevEl: ".hero-swiper .swiper-button-prev"
+      },
       effect: "fade",
-      fadeEffect: { crossFade: true },
+      fadeEffect: {
+        crossFade: true
+      },
       speed: 800
     });
 
     // Live Reviews
+
     let reviewSwiper;
+
     function initReviewSwiper() {
-      if (reviewSwiper) reviewSwiper.destroy(true, true);
-      reviewSwiper = new Swiper('.testimonial-swiper', {
-        loop: true, autoplay: { delay: 4000 },
-        pagination: { el: '.testimonial-pagination', clickable: true },
-        slidesPerView: 1, spaceBetween: 24,
-        breakpoints: { 768: { slidesPerView: 2 }, 1100: { slidesPerView: 3 } }
+      if (reviewSwiper) {
+        reviewSwiper.destroy(true, true);
+      }
+
+      reviewSwiper = new Swiper(".testimonial-swiper", {
+        loop: true,
+        autoplay: {
+          delay: 4000
+        },
+        pagination: {
+          el: ".testimonial-pagination",
+          clickable: true
+        },
+        slidesPerView: 1,
+        spaceBetween: 24,
+        breakpoints: {
+          768: {
+            slidesPerView: 2
+          },
+          1100: {
+            slidesPerView: 3
+          }
+        }
       });
     }
-    fetch('/api/reviews/')
-      .then(r => r.json())
-      .then(data => {
-        const wrapper = document.getElementById('reviews-wrapper');
-        if (!data.reviews.length) {
-          wrapper.innerHTML = `<div class="swiper-slide"><div class="testimonial-card" style="text-align:center;padding:48px;"><p style="color:var(--text-muted);">No reviews yet. Be the first to review!</p></div></div>`;
-        } else {
-          wrapper.innerHTML = data.reviews.map(r => {
-            const stars = '★'.repeat(r.rating) + '☆'.repeat(5 - r.rating);
-            return `<div class="swiper-slide"><div class="testimonial-card"><div class="stars">${stars}</div><p class="review-text">"${r.comment}"</p><div class="reviewer"><div class="avatar">${r.username[0].toUpperCase()}</div><div><strong>${r.username}</strong><span>Verified Buyer · ${r.date}</span></div></div></div></div>`;
-          }).join('');
+
+    fetch("/api/reviews/")
+      .then(response => {
+        if (!response.ok) {
+          throw new Error("Could not load reviews");
         }
+        return response.json();
+      })
+      .then(data => {
+        const wrapper = document.getElementById("reviews-wrapper");
+
+        if (!data.reviews || !data.reviews.length) {
+          wrapper.innerHTML = `
+            <div class="swiper-slide">
+              <div class="testimonial-card" style="text-align:center;padding:48px;">
+                <p style="color:var(--text-muted);">
+                  No reviews yet. Be the first to review!
+                </p>
+              </div>
+            </div>`;
+        } else {
+          wrapper.innerHTML = data.reviews.map(review => {
+            const rating = Math.max(
+              0,
+              Math.min(5, Number(review.rating) || 0)
+            );
+
+            const stars = "★".repeat(rating) + "☆".repeat(5 - rating);
+
+            return `
+              <div class="swiper-slide">
+                <div class="testimonial-card">
+                  <div class="stars">${stars}</div>
+                  <p class="review-text">"${escapeHTML(review.comment)}"</p>
+                  <div class="reviewer">
+                    <div class="avatar">
+                      ${escapeHTML((review.username || "?")[0].toUpperCase())}
+                    </div>
+                    <div>
+                      <strong>${escapeHTML(review.username)}</strong>
+                      <span>Verified Buyer · ${escapeHTML(review.date)}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+          }).join("");
+        }
+
         initReviewSwiper();
       })
       .catch(() => initReviewSwiper());
 
-    // Star rating highlight
-    document.querySelectorAll('.star-label').forEach((label, i, all) => {
-      label.addEventListener('mouseover', () => all.forEach((l, j) => l.style.color = j <= i ? 'var(--gold)' : 'var(--border)'));
-      label.addEventListener('mouseout', () => {
-        const checked = document.querySelector('input[name="rating"]:checked');
-        const val = checked ? parseInt(checked.value) - 1 : 4;
-        all.forEach((l, j) => l.style.color = j <= val ? 'var(--gold)' : 'var(--border)');
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>"']/g, char => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      })[char]);
+    }
+
+    // Star rating
+
+    document.querySelectorAll(".star-label").forEach((label, i, all) => {
+      label.addEventListener("mouseover", () => {
+        all.forEach((element, j) => {
+          element.style.color = j <= i
+            ? "var(--gold)"
+            : "var(--border)";
+        });
       });
-      label.querySelector('input').addEventListener('change', () =>
-        all.forEach((l, j) => l.style.color = j <= i ? 'var(--gold)' : 'var(--border)')
-      );
+
+      label.addEventListener("mouseout", () => {
+        const checked = document.querySelector(
+          'input[name="rating"]:checked'
+        );
+
+        const value = checked ? parseInt(checked.value) - 1 : 4;
+
+        all.forEach((element, j) => {
+          element.style.color = j <= value
+            ? "var(--gold)"
+            : "var(--border)";
+        });
+      });
+
+      label.querySelector("input").addEventListener("change", () => {
+        all.forEach((element, j) => {
+          element.style.color = j <= i
+            ? "var(--gold)"
+            : "var(--border)";
+        });
+      });
     });
-    // Init stars
-    document.querySelectorAll('.star-label').forEach((l, j) => l.style.color = j <= 4 ? 'var(--gold)' : 'var(--border)');
+
+    document.querySelectorAll(".star-label").forEach((element, index) => {
+      element.style.color = index <= 4
+        ? "var(--gold)"
+        : "var(--border)";
+    });
 
     // Scroll reveal
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add("visible"); });
-    }, { threshold: 0.12 });
-    document.querySelectorAll(".reveal").forEach(el => observer.observe(el));
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("visible");
+        }
+      });
+    }, {
+      threshold: 0.12
+    });
+
+    document.querySelectorAll(".reveal").forEach(element => {
+      observer.observe(element);
+    });
 
     // Newsletter
-    function subscribeNewsletter(e) {
-      e.preventDefault();
-      document.getElementById("newsletter-msg").innerText = "✓ Subscribed! Thank you.";
-      e.target.reset();
+
+    function subscribeNewsletter(event) {
+      event.preventDefault();
+
+      document.getElementById("newsletter-msg").innerText =
+        "✓ Subscribed! Thank you.";
+
+      event.target.reset();
     }
+
     // Hide loader
-    window.addEventListener('load', () => {
-      const loader = document.getElementById('page-loader');
-      if (loader) { loader.classList.add('hidden'); }
+
+    window.addEventListener("load", () => {
+      const loader = document.getElementById("page-loader");
+
+      if (loader) {
+        loader.classList.add("hidden");
+      }
     });
   </script>
+
 </body>
 </html>

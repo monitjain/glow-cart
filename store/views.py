@@ -11,6 +11,9 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.utils import timezone
 from .models import Product, Order, SiteVisitor, ReturnRequest, Review
+from decimal import Decimal, ROUND_HALF_UP
+from django.db import transaction
+from django.db.models import F
 
 
 logger = logging.getLogger(__name__)
@@ -148,52 +151,148 @@ def product_detail(request, id):
     return render(request, 'product.html', {'product': product})
 
 
+
 @login_required
 def checkout(request):
     track_visitor(request)
+
     if request.method == 'POST':
-        name     = request.POST.get('name')
-        street   = request.POST.get('street', '').strip()
-        city     = request.POST.get('city', '').strip()
-        state    = request.POST.get('state', '').strip()
-        pincode  = request.POST.get('pincode', '').strip()
-        address  = f"{street}, {city}, {state} - {pincode}"
-        phone    = request.POST.get('phone')
-        items    = request.POST.get('items')
-        total    = request.POST.get('total', 0)
-        discount = request.POST.get('discount', 0)
-        shipping = request.POST.get('shipping', 0)
-        promo    = request.POST.get('promo', '')
-        email    = request.POST.get('email', '').strip()
+        name = request.POST.get('name', '').strip()
+        street = request.POST.get('street', '').strip()
+        city = request.POST.get('city', '').strip()
+        state = request.POST.get('state', '').strip()
+        pincode = request.POST.get('pincode', '').strip()
+        phone = request.POST.get('phone', '').strip()
+        email = request.POST.get('email', '').strip()
+        promo = request.POST.get('promo', '').strip().upper()
 
-        if email and not request.user.email:
-            request.user.email = email
-            request.user.save(update_fields=['email'])
+        def checkout_error(message):
+            return render(request, 'checkout.html', {
+                'is_first_order': not Order.objects.filter(user=request.user).exists(),
+                'error': message,
+            })
 
-        order = Order.objects.create(
-            user=request.user,
-            name=name,
-            address=address,
-            street=street,
-            city=city,
-            state=state,
-            pincode=pincode,
-            phone=phone,
-            email=email,
-            items=items,
-            total=int(float(total)),
-            status='Confirmed'
-        )
+        if not all([name, street, city, state, pincode, phone]):
+            return checkout_error('Please complete all required delivery details.')
 
-        recipient = request.user.email or email
-        if recipient:
-            send_order_email(order, recipient, event='confirmed')
+        try:
+            cart_items = json.loads(request.POST.get('items', ''))
+            if not isinstance(cart_items, list) or not cart_items:
+                raise ValueError
+        except (ValueError, TypeError):
+            return checkout_error('Your cart is invalid. Please refresh it and try again.')
 
-        return redirect('/review/order/')
+        quantities = {}
+        try:
+            for item in cart_items:
+                product_id = int(item['id'])
+                qty = int(item['qty'])
+
+                if product_id <= 0 or qty <= 0 or qty > 100:
+                    raise ValueError
+
+                quantities[product_id] = quantities.get(product_id, 0) + qty
+
+            if not quantities:
+                raise ValueError
+        except (KeyError, TypeError, ValueError):
+            return checkout_error('Your cart contains invalid items. Please update your cart.')
+
+        try:
+            with transaction.atomic():
+                products = list(
+                    Product.objects.select_for_update()
+                    .filter(id__in=quantities.keys(), is_active=True)
+                    .order_by('id')
+                )
+
+                if len(products) != len(quantities):
+                    raise ValueError('A product in your cart is no longer available.')
+
+                order_items = []
+                subtotal = Decimal('0')
+
+                for product in products:
+                    qty = quantities[product.id]
+
+                    if product.stock is None:
+                        raise ValueError(
+                            f'{product.name} has availability on request and cannot be ordered yet.'
+                        )
+
+                    if product.stock < qty:
+                        raise ValueError(
+                            f'Only {product.stock} unit(s) of {product.name} are currently available.'
+                        )
+
+                    price = Decimal(str(product.price))
+                    subtotal += price * qty
+
+                    order_items.append({
+                        'id': product.id,
+                        'name': product.name,
+                        'price': product.price,
+                        'qty': qty,
+                    })
+
+                discount = Decimal('0')
+                first_order = not Order.objects.filter(user=request.user).exists()
+
+                if promo == 'FLASH40':
+                    discount = subtotal * Decimal('0.40')
+                elif promo == 'NEW200':
+                    discount = min(Decimal('200'), subtotal)
+                elif promo == 'WELCOME10':
+                    if not first_order:
+                        raise ValueError('WELCOME10 is only valid for first-time orders.')
+                    discount = subtotal * Decimal('0.10')
+                elif promo:
+                    raise ValueError('Invalid promo code.')
+
+                discount = discount.quantize(Decimal('1'), rounding=ROUND_HALF_UP)
+                shipping = Decimal('0') if subtotal >= Decimal('999') else Decimal('49')
+                total = int((subtotal - discount + shipping).quantize(
+                    Decimal('1'), rounding=ROUND_HALF_UP
+                ))
+
+                address = f'{street}, {city}, {state} - {pincode}'
+
+                if email and not request.user.email:
+                    request.user.email = email
+                    request.user.save(update_fields=['email'])
+
+                order = Order.objects.create(
+                    user=request.user,
+                    name=name,
+                    address=address,
+                    street=street,
+                    city=city,
+                    state=state,
+                    pincode=pincode,
+                    phone=phone,
+                    email=email or request.user.email,
+                    items=json.dumps(order_items),
+                    total=total,
+                    status='Confirmed',
+                )
+
+                for product in products:
+                    product.stock -= quantities[product.id]
+                    product.save(update_fields=['stock'])
+
+            recipient = request.user.email or email
+            if recipient:
+                send_order_email(order, recipient, event='confirmed')
+
+            return redirect('/review/order/')
+
+        except ValueError as error:
+            return checkout_error(str(error))
 
     return render(request, 'checkout.html', {
         'is_first_order': not Order.objects.filter(user=request.user).exists()
     })
+
 
 
 def success(request):

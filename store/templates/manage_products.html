@@ -152,14 +152,14 @@
         style="padding:12px;flex:2;min-width:200px;border-radius:8px;"
       >
 
-      <select id="productFilter" onchange="filterProducts()" style="padding:12px;border-radius:8px;">
-        <option value="all">All Products</option>
-        <option value="active">Active</option>
-        <option value="inactive">Inactive</option>
-        <option value="stock">In Stock</option>
-        <option value="out">Out of Stock</option>
-      </select>
-
+     <select id="productFilter" onchange="filterProducts()" style="padding:12px;border-radius:8px;">
+  <option value="all">All Products</option>
+  <option value="active">Active</option>
+  <option value="inactive">Inactive</option>
+  <option value="stock">In Stock</option>
+  <option value="out">Out of Stock</option>
+  <option value="unknown">Availability on Request</option>
+</select>
       <select id="productSort" onchange="sortProducts()" style="padding:12px;border-radius:8px;">
         <option value="default">Newest First</option>
         <option value="name">Name: A–Z</option>
@@ -301,6 +301,8 @@
   }
 
   function filterProducts() {
+    if (filter === "unknown") matchesFilter = stock < 0;
+    
     if (!productTable) return;
 
     const search = document.getElementById("productSearch").value.toLowerCase().trim();
