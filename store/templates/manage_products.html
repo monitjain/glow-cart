@@ -52,13 +52,13 @@
 
 <body>
 <nav class="navbar scrolled" id="navbar">
-  <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+  <a href="/" class="logo">Glow Cart <span class="logo-star">âœ¦</span></a>
   <div class="nav-links" id="nav-links">
     <a href="/">Store</a>
     <a href="/dashboard/" class="nav-cart">Dashboard</a>
     <form method="POST" action="/logout/" style="display:inline;">
       {% csrf_token %}
-      <button type="submit" class="logout-btn">{{ user.username }} · Logout</button>
+      <button type="submit" class="logout-btn">{{ user.username }} Â· Logout</button>
     </form>
   </div>
   <button class="hamburger" id="hamburger">&#9776;</button>
@@ -67,22 +67,22 @@
 <div class="dash-layout">
   <aside class="dash-sidebar">
     <div class="sidebar-label">Overview</div>
-    <a href="/dashboard/" class="sidebar-link"><span>📊</span> Dashboard</a>
+    <a href="/dashboard/" class="sidebar-link"><span>ðŸ“Š</span> Dashboard</a>
 
     <div class="sidebar-label">Manage</div>
-    <a href="/dashboard/orders/" class="sidebar-link"><span>📦</span> All Orders</a>
-    <a href="/dashboard/products/" class="sidebar-link active"><span>🛍️</span> Products</a>
-    <a href="/dashboard/customers/" class="sidebar-link"><span>👥</span> Customers</a>
+    <a href="/dashboard/orders/" class="sidebar-link"><span>ðŸ“¦</span> All Orders</a>
+    <a href="/dashboard/products/" class="sidebar-link active"><span>ðŸ›ï¸</span> Products</a>
+    <a href="/dashboard/customers/" class="sidebar-link"><span>ðŸ‘¥</span> Customers</a>
 
     <div class="sidebar-label">System</div>
-    <a href="/admin/" class="sidebar-link"><span>⚙️</span> Django Admin</a>
-    <a href="/" class="sidebar-link"><span>🏠</span> View Store</a>
+    <a href="/admin/" class="sidebar-link"><span>âš™ï¸</span> Django Admin</a>
+    <a href="/" class="sidebar-link"><span>ðŸ </span> View Store</a>
   </aside>
 
   <main class="dash-main">
     <div class="dash-header">
       <div>
-        <h2>🛍️ Products</h2>
+        <h2>ðŸ›ï¸ Products</h2>
         <p>{{ products|length }} products in catalogue</p>
       </div>
       <a href="#add-product" class="add-btn">+ Add Product</a>
@@ -104,7 +104,7 @@
         </div>
 
         <div class="field">
-          <label>Price (₹) *</label>
+          <label>Price (â‚¹) *</label>
           <input type="number" name="price" min="0" step="1" required>
         </div>
 
@@ -162,7 +162,7 @@
 </select>
       <select id="productSort" onchange="sortProducts()" style="padding:12px;border-radius:8px;">
         <option value="default">Newest First</option>
-        <option value="name">Name: A–Z</option>
+        <option value="name">Name: Aâ€“Z</option>
         <option value="price-low">Price: Low to High</option>
         <option value="price-high">Price: High to Low</option>
         <option value="stock">Stock: Low to High</option>
@@ -202,8 +202,8 @@
             </td>
 
             <td>{{ product.name }}</td>
-            <td>₹{{ product.price }}</td>
-            <td>{{ product.sku|default:"—" }}</td>
+            <td>â‚¹{{ product.price }}</td>
+            <td>{{ product.sku|default:"â€”" }}</td>
             <td>{{ product.stock|default_if_none:"Unknown" }}</td>
 
             <td>
@@ -233,7 +233,7 @@
                   </div>
 
                   <div class="field">
-                    <label>Price (₹)</label>
+                    <label>Price (â‚¹)</label>
                     <input type="number" name="price" value="{{ product.price }}" min="0" required>
                   </div>
 
@@ -301,7 +301,7 @@
   }
 
   function filterProducts() {
-    if (filter === "unknown") matchesFilter = stock < 0;
+
     
     if (!productTable) return;
 
@@ -322,6 +322,7 @@
       if (filter === "inactive") matchesFilter = !active;
       if (filter === "stock") matchesFilter = stock > 0;
       if (filter === "out") matchesFilter = stock === 0;
+      if (filter === "unknown") matchesFilter = stock < 0;
 
       row.style.display = matchesSearch && matchesFilter ? "" : "none";
     });
