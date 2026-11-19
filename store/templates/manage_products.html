@@ -131,11 +131,44 @@
 
     <h3 style="color:#fff;margin-bottom:15px;">Existing Products</h3>
 
+<div class="product-tools" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+  <input
+    type="search"
+    id="productSearch"
+    placeholder="Search by product name or SKU..."
+    oninput="filterProducts()"
+    style="padding:12px;flex:2;min-width:200px;border-radius:8px;"
+  >
+
+  <select id="productFilter" onchange="filterProducts()" style="padding:12px;border-radius:8px;">
+    <option value="all">All Products</option>
+    <option value="active">Active</option>
+    <option value="inactive">Inactive</option>
+    <option value="stock">In Stock</option>
+    <option value="out">Out of Stock</option>
+  </select>
+
+  <select id="productSort" onchange="sortProducts()" style="padding:12px;border-radius:8px;">
+    <option value="default">Newest First</option>
+    <option value="name">Name: A–Z</option>
+    <option value="price-low">Price: Low to High</option>
+    <option value="price-high">Price: High to Low</option>
+    <option value="stock">Stock: Low to High</option>
+  </select>
+</div>
+
+
     <div class="dash-table-card">
       {% if products %}
       <table class="dash-table">
         <thead>
-          <tr>
+          <tr
+  data-name="{{ product.name|lower }}"
+  data-sku="{{ product.sku|default_if_none:''|lower }}"
+  data-price="{{ product.price }}"
+  data-stock="{{ product.stock|default_if_none:'-1' }}"
+  data-active="{{ product.is_active|yesno:'true,false' }}"
+>
             <th>Image</th>
             <th>Product</th>
             <th>Price</th>
@@ -225,6 +258,7 @@
   </main>
 </div>
 
+
 <script>
   document.getElementById("hamburger").addEventListener("click", () => {
     document.getElementById("nav-links").classList.toggle("open");
@@ -233,6 +267,70 @@
   function toggleEdit(id) {
     document.getElementById(id).classList.toggle("open");
   }
+
+  const productTable = document.querySelector(".dash-table tbody");
+
+  if (productTable) {
+    Array.from(productTable.rows).forEach((row, index) => {
+      row.dataset.originalIndex = index;
+    });
+  }
+
+  function filterProducts() {
+    if (!productTable) return;
+
+    const search = document.getElementById("productSearch").value.toLowerCase().trim();
+    const filter = document.getElementById("productFilter").value;
+
+    Array.from(productTable.rows).forEach(row => {
+      const name = row.dataset.name || "";
+      const sku = row.dataset.sku || "";
+      const stock = Number(row.dataset.stock);
+      const active = row.dataset.active === "true";
+
+      const matchesSearch = name.includes(search) || sku.includes(search);
+
+      let matchesFilter = true;
+
+      if (filter === "active") matchesFilter = active;
+      if (filter === "inactive") matchesFilter = !active;
+      if (filter === "stock") matchesFilter = stock > 0;
+      if (filter === "out") matchesFilter = stock === 0;
+
+      row.style.display = matchesSearch && matchesFilter ? "" : "none";
+    });
+  }
+
+  function sortProducts() {
+    if (!productTable) return;
+
+    const sort = document.getElementById("productSort").value;
+    const rows = Array.from(productTable.rows);
+
+    rows.sort((a, b) => {
+      const nameA = a.dataset.name || "";
+      const nameB = b.dataset.name || "";
+      const priceA = Number(a.dataset.price) || 0;
+      const priceB = Number(b.dataset.price) || 0;
+      const stockA = Number(a.dataset.stock);
+      const stockB = Number(b.dataset.stock);
+
+      if (sort === "name") return nameA.localeCompare(nameB);
+      if (sort === "price-low") return priceA - priceB;
+      if (sort === "price-high") return priceB - priceA;
+
+      if (sort === "stock") {
+        if (stockA < 0) return 1;
+        if (stockB < 0) return -1;
+        return stockA - stockB;
+      }
+
+      return Number(a.dataset.originalIndex) - Number(b.dataset.originalIndex);
+    });
+
+    rows.forEach(row => productTable.appendChild(row));
+  }
 </script>
+
 </body>
 </html>
