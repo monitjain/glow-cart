@@ -49,6 +49,7 @@
     @media(max-width:600px){.product-form{grid-template-columns:1fr}.field.full{grid-column:auto}.panel{padding:16px}}
   </style>
 </head>
+
 <body>
 <nav class="navbar scrolled" id="navbar">
   <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
@@ -67,10 +68,12 @@
   <aside class="dash-sidebar">
     <div class="sidebar-label">Overview</div>
     <a href="/dashboard/" class="sidebar-link"><span>📊</span> Dashboard</a>
+
     <div class="sidebar-label">Manage</div>
     <a href="/dashboard/orders/" class="sidebar-link"><span>📦</span> All Orders</a>
     <a href="/dashboard/products/" class="sidebar-link active"><span>🛍️</span> Products</a>
     <a href="/dashboard/customers/" class="sidebar-link"><span>👥</span> Customers</a>
+
     <div class="sidebar-label">System</div>
     <a href="/admin/" class="sidebar-link"><span>⚙️</span> Django Admin</a>
     <a href="/" class="sidebar-link"><span>🏠</span> View Store</a>
@@ -91,38 +94,47 @@
 
     <section class="panel" id="add-product">
       <h3>Add New Product</h3>
+
       <form method="POST" enctype="multipart/form-data" class="product-form">
         {% csrf_token %}
+
         <div class="field">
           <label>Product Name *</label>
           <input type="text" name="name" maxlength="100" required>
         </div>
+
         <div class="field">
           <label>Price (₹) *</label>
           <input type="number" name="price" min="0" step="1" required>
         </div>
+
         <div class="field">
           <label>SKU (optional)</label>
           <input type="text" name="sku" maxlength="50" placeholder="e.g. GC-001">
         </div>
+
         <div class="field">
           <label>Stock Quantity (optional)</label>
           <input type="number" name="stock" min="0" placeholder="Leave blank if unknown">
         </div>
+
         <div class="field full">
           <label>Product Description</label>
           <textarea name="description"></textarea>
         </div>
+
         <div class="field full">
           <label>Product Image *</label>
           <input type="file" name="image" accept="image/*" required>
         </div>
+
         <div class="field full">
           <label class="check-field">
             <input type="checkbox" name="is_active" checked>
             Make product visible in store
           </label>
         </div>
+
         <div class="field full">
           <button type="submit" class="add-btn">Save New Product</button>
         </div>
@@ -131,44 +143,37 @@
 
     <h3 style="color:#fff;margin-bottom:15px;">Existing Products</h3>
 
-<div class="product-tools" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
-  <input
-    type="search"
-    id="productSearch"
-    placeholder="Search by product name or SKU..."
-    oninput="filterProducts()"
-    style="padding:12px;flex:2;min-width:200px;border-radius:8px;"
-  >
+    <div class="product-tools" style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px;">
+      <input
+        type="search"
+        id="productSearch"
+        placeholder="Search by product name or SKU..."
+        oninput="filterProducts()"
+        style="padding:12px;flex:2;min-width:200px;border-radius:8px;"
+      >
 
-  <select id="productFilter" onchange="filterProducts()" style="padding:12px;border-radius:8px;">
-    <option value="all">All Products</option>
-    <option value="active">Active</option>
-    <option value="inactive">Inactive</option>
-    <option value="stock">In Stock</option>
-    <option value="out">Out of Stock</option>
-  </select>
+      <select id="productFilter" onchange="filterProducts()" style="padding:12px;border-radius:8px;">
+        <option value="all">All Products</option>
+        <option value="active">Active</option>
+        <option value="inactive">Inactive</option>
+        <option value="stock">In Stock</option>
+        <option value="out">Out of Stock</option>
+      </select>
 
-  <select id="productSort" onchange="sortProducts()" style="padding:12px;border-radius:8px;">
-    <option value="default">Newest First</option>
-    <option value="name">Name: A–Z</option>
-    <option value="price-low">Price: Low to High</option>
-    <option value="price-high">Price: High to Low</option>
-    <option value="stock">Stock: Low to High</option>
-  </select>
-</div>
-
+      <select id="productSort" onchange="sortProducts()" style="padding:12px;border-radius:8px;">
+        <option value="default">Newest First</option>
+        <option value="name">Name: A–Z</option>
+        <option value="price-low">Price: Low to High</option>
+        <option value="price-high">Price: High to Low</option>
+        <option value="stock">Stock: Low to High</option>
+      </select>
+    </div>
 
     <div class="dash-table-card">
       {% if products %}
       <table class="dash-table">
         <thead>
-          <tr
-  data-name="{{ product.name|lower }}"
-  data-sku="{{ product.sku|default_if_none:''|lower }}"
-  data-price="{{ product.price }}"
-  data-stock="{{ product.stock|default_if_none:'-1' }}"
-  data-active="{{ product.is_active|yesno:'true,false' }}"
->
+          <tr>
             <th>Image</th>
             <th>Product</th>
             <th>Price</th>
@@ -178,9 +183,16 @@
             <th>Actions</th>
           </tr>
         </thead>
+
         <tbody>
           {% for product in products %}
-          <tr>
+          <tr
+            data-name="{{ product.name|lower }}"
+            data-sku="{{ product.sku|default_if_none:''|lower }}"
+            data-price="{{ product.price }}"
+            data-stock="{{ product.stock|default_if_none:'-1' }}"
+            data-active="{{ product.is_active|yesno:'true,false' }}"
+          >
             <td>
               {% if product.image %}
                 <img src="{{ product.image.url }}" class="prod-img" alt="{{ product.name }}">
@@ -188,10 +200,12 @@
                 No image
               {% endif %}
             </td>
+
             <td>{{ product.name }}</td>
             <td>₹{{ product.price }}</td>
             <td>{{ product.sku|default:"—" }}</td>
             <td>{{ product.stock|default_if_none:"Unknown" }}</td>
+
             <td>
               {% if product.is_active %}
                 <span class="status active">Active</span>
@@ -199,8 +213,10 @@
                 <span class="status inactive">Inactive</span>
               {% endif %}
             </td>
+
             <td>
               <button type="button" class="edit-btn" onclick="toggleEdit('edit-{{ product.id }}')">Edit</button>
+
               <form method="POST" action="{% url 'delete_product' product.id %}" style="display:inline;" onsubmit="return confirm('Permanently delete {{ product.name|escapejs }}?')">
                 {% csrf_token %}
                 <button type="submit" class="delete-btn">Delete</button>
@@ -210,36 +226,44 @@
                 <form method="POST" enctype="multipart/form-data" class="product-form">
                   {% csrf_token %}
                   <input type="hidden" name="product_id" value="{{ product.id }}">
+
                   <div class="field">
                     <label>Name</label>
                     <input name="name" value="{{ product.name }}" maxlength="100" required>
                   </div>
+
                   <div class="field">
                     <label>Price (₹)</label>
                     <input type="number" name="price" value="{{ product.price }}" min="0" required>
                   </div>
+
                   <div class="field">
                     <label>SKU</label>
                     <input name="sku" value="{{ product.sku|default_if_none:'' }}" maxlength="50">
                   </div>
+
                   <div class="field">
                     <label>Stock</label>
                     <input type="number" name="stock" value="{{ product.stock|default_if_none:'' }}" min="0">
                   </div>
+
                   <div class="field full">
                     <label>Description</label>
                     <textarea name="description">{{ product.description }}</textarea>
                   </div>
+
                   <div class="field full">
                     <label>Replace image (optional)</label>
                     <input type="file" name="image" accept="image/*">
                   </div>
+
                   <div class="field full">
                     <label class="check-field">
                       <input type="checkbox" name="is_active" {% if product.is_active %}checked{% endif %}>
                       Product visible in store
                     </label>
                   </div>
+
                   <div class="field full" style="display:flex;gap:10px;flex-wrap:wrap;">
                     <button type="submit" class="save-btn">Save Changes</button>
                     <button type="button" class="cancel-btn" onclick="toggleEdit('edit-{{ product.id }}')">Cancel</button>
@@ -251,13 +275,13 @@
           {% endfor %}
         </tbody>
       </table>
+
       {% else %}
         <p class="no-products">No products found. Add your first product above.</p>
       {% endif %}
     </div>
   </main>
 </div>
-
 
 <script>
   document.getElementById("hamburger").addEventListener("click", () => {
@@ -329,6 +353,9 @@
     });
 
     rows.forEach(row => productTable.appendChild(row));
+
+    // Keep the currently selected search and filter applied after sorting.
+    filterProducts();
   }
 </script>
 
