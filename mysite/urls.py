@@ -76,7 +76,11 @@ urlpatterns = [
         views.update_return_status,
         name='update_return_status'
     ),
-
+    path(
+    'product/<int:id>/review/',
+    views.submit_product_review,
+    name='submit_product_review'
+),
     path('review/submit/', views.submit_review, name='submit_review'),
     path('review/order/', views.order_review, name='order_review'),
     path('api/reviews/', views.reviews_api, name='reviews_api'),

@@ -6,11 +6,134 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ product.name }} — Glow Cart</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    .product-rating {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 12px 0;
+      color: #d4af37;
+      font-size: 19px;
+    }
+
+    .rating-stars {
+      color: #d4af37;
+      letter-spacing: 2px;
+    }
+
+    .rating-number {
+      color: #777;
+      font-size: 13px;
+    }
+
+    .product-reviews {
+      max-width: 1100px;
+      margin: 45px auto;
+      padding: 25px;
+      border-radius: 12px;
+      background: #fff;
+      box-shadow: 0 3px 18px rgba(0,0,0,0.06);
+    }
+
+    .product-reviews h3 {
+      font-family: 'Playfair Display', serif;
+      margin-bottom: 18px;
+    }
+
+    .review-summary {
+      margin-bottom: 25px;
+    }
+
+    .review-form {
+      margin: 25px 0;
+      padding: 20px;
+      border: 1px solid #eee;
+      border-radius: 10px;
+    }
+
+    .review-form label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+
+    .review-form textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-family: 'Poppins', sans-serif;
+      resize: vertical;
+    }
+
+    .review-form select {
+      padding: 9px;
+      border: 1px solid #ddd;
+      border-radius: 7px;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .review-form button {
+      display: inline-block;
+      padding: 11px 22px;
+      border: none;
+      border-radius: 7px;
+      background: #1a2637;
+      color: white;
+      cursor: pointer;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    .review-form button:hover {
+      background: #d4af37;
+      color: #1a2637;
+    }
+
+    .single-review {
+      padding: 17px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    .single-review:last-child {
+      border-bottom: none;
+    }
+
+    .single-review strong {
+      color: #1a2637;
+    }
+
+    .single-review .review-stars {
+      color: #d4af37;
+      margin: 5px 0;
+    }
+
+    .review-date {
+      color: #888;
+      font-size: 12px;
+    }
+
+    .no-reviews {
+      color: #777;
+      padding: 12px 0;
+    }
+
+    @media (max-width: 600px) {
+      .product-reviews {
+        margin: 25px 12px;
+        padding: 18px;
+      }
+    }
+  </style>
 </head>
 
 <body>
+
   <nav class="navbar scrolled" id="navbar">
     <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
 
@@ -46,20 +169,21 @@
     <button class="hamburger" id="hamburger">&#9776;</button>
   </nav>
 
+
   <div class="product-container">
 
     <div class="product-img">
       {% if product.image %}
         <img
           src="{{ product.image.url }}"
-          alt="{{ product.name|escapejs }}"
+          alt="{{ product.name|escape }}"
           id="product-img"
           onerror="this.onerror=null;this.src='https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable';"
         >
       {% else %}
         <img
           src="https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable"
-          alt="{{ product.name|escapejs }}"
+          alt="{{ product.name|escape }}"
           id="product-img"
         >
       {% endif %}
@@ -75,8 +199,17 @@
 
       <p class="price">₹{{ product.price }}</p>
 
+      <!-- Dynamic product rating -->
       <div class="product-rating">
-        ★★★★☆ <span>4.0 / 5</span>
+        {% if average_rating %}
+          <span class="rating-stars" data-rating="{{ average_rating|floatformat:1 }}">☆☆☆☆☆</span>
+          <span class="rating-number">
+            {{ average_rating|floatformat:1 }} / 5
+          </span>
+        {% else %}
+          <span class="rating-stars">☆☆☆☆☆</span>
+          <span class="rating-number">No ratings yet</span>
+        {% endif %}
       </div>
 
       {% if product.stock is None %}
@@ -98,7 +231,7 @@
           <button
             class="btn cart-btn"
             data-product-id="{{ product.id }}"
-            data-name="{{ product.name|escapejs }}"
+            data-name="{{ product.name|escape }}"
             data-price="{{ product.price }}"
             data-stock="{{ product.stock }}"
             onclick="handleCart(this)"
@@ -114,7 +247,7 @@
           <button
             class="btn buy-btn"
             data-product-id="{{ product.id }}"
-            data-name="{{ product.name|escapejs }}"
+            data-name="{{ product.name|escape }}"
             data-price="{{ product.price }}"
             data-stock="{{ product.stock }}"
             onclick="buyNow(this)"
@@ -142,9 +275,120 @@
     </div>
   </div>
 
+
+  <!-- Product-specific reviews -->
+  <section class="product-reviews">
+
+    <h3>Customer Ratings & Reviews</h3>
+
+    <div class="review-summary">
+      {% if average_rating %}
+        <div class="product-rating">
+          <span class="rating-stars" data-rating="{{ average_rating|floatformat:1 }}">☆☆☆☆☆</span>
+          <strong>{{ average_rating|floatformat:1 }} / 5</strong>
+        </div>
+        <p>{{ review_count }} customer review{{ review_count|pluralize }}</p>
+      {% else %}
+        <p class="no-reviews">This product has not received any ratings yet. Be the first to review it!</p>
+      {% endif %}
+    </div>
+
+
+    {% if user.is_authenticated %}
+
+      <form
+        method="POST"
+        action="{% url 'submit_product_review' product.id %}"
+        class="review-form"
+      >
+        {% csrf_token %}
+
+        <h4>Share Your Experience</h4>
+
+        <label for="rating">Your Rating</label>
+
+        <select name="rating" id="rating" required>
+          <option value="">Select rating</option>
+          <option value="5">★★★★★ - Excellent</option>
+          <option value="4">★★★★ - Very Good</option>
+          <option value="3">★★★ - Good</option>
+          <option value="2">★★ - Fair</option>
+          <option value="1">★ - Poor</option>
+        </select>
+
+        <label for="comment" style="margin-top:15px;">Your Review</label>
+
+        <textarea
+          name="comment"
+          id="comment"
+          placeholder="Tell us about your experience with this product..."
+          required
+          maxlength="1000"
+        ></textarea>
+
+        <button type="submit">Submit Review</button>
+      </form>
+
+    {% else %}
+
+      <p>
+        <a href="/login/?next=/product/{{ product.id }}/">
+          Login
+        </a>
+        to rate and review this product.
+      </p>
+
+    {% endif %}
+
+
+    <!-- Reviews belonging only to this product -->
+    <div class="reviews-list">
+
+      {% for review in product_reviews %}
+
+        <div class="single-review">
+
+          <strong>{{ review.user.username|escape }}</strong>
+
+          <div class="review-stars" data-rating="{{ review.rating }}">
+            ★★★★★
+          </div>
+
+          <p>{{ review.comment|linebreaksbr }}</p>
+
+          <span class="review-date">
+            {{ review.created_at|date:"d M Y" }}
+          </span>
+
+        </div>
+
+      {% empty %}
+
+        <p class="no-reviews">No customer reviews yet.</p>
+
+      {% endfor %}
+
+    </div>
+
+  </section>
+
+
   <div class="toast" id="toast">✓ Added to cart!</div>
 
+
   <script>
+    // Render stars according to the actual rating
+    document.querySelectorAll('.rating-stars, .review-stars').forEach(element => {
+      const rating = Math.max(
+        0,
+        Math.min(5, Number(element.dataset.rating) || 0)
+      );
+
+      const fullStars = Math.round(rating);
+      element.textContent = '★'.repeat(fullStars) + '☆'.repeat(5 - fullStars);
+    });
+
+
     function getCart() {
       try {
         const cart = JSON.parse(localStorage.getItem("cart"));
@@ -213,6 +457,7 @@
         existingItem.stock = product.stock;
         existingItem.name = product.name;
         existingItem.price = product.price;
+
       } else {
         cart.push({
           id: product.id,

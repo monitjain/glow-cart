@@ -82,15 +82,21 @@ class ReturnRequest(models.Model):
 
 
 class Review(models.Model):
-    user       = models.ForeignKey(User, on_delete=models.CASCADE)
-    rating     = models.IntegerField(default=5)  # 1-5
-    comment    = models.TextField()
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        related_name='reviews',
+        null=True,
+        blank=True
+    )
+    rating = models.IntegerField(default=5)  # 1-5
+    comment = models.TextField()
     created_at = models.DateTimeField(auto_now_add=True)
     is_visible = models.BooleanField(default=True)
 
     def __str__(self):
-        return f"{self.user.username} — {self.rating}★"
-
+        return f"{self.user.username} - {self.rating} stars"
 
 class SiteVisitor(models.Model):
     session_key  = models.CharField(max_length=40, unique=True)
