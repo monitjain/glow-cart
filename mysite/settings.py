@@ -55,6 +55,9 @@ SECURE_SSL_REDIRECT = not DEBUG
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
 SESSION_COOKIE_SAMESITE = 'Lax'
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+SESSION_COOKIE_AGE = 1209600
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
 
 SECURE_HSTS_SECONDS = 86400 if not DEBUG else 0
 SECURE_HSTS_INCLUDE_SUBDOMAINS = False
@@ -191,19 +194,23 @@ STATICFILES_DIRS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.environ.get(
-        'CLOUDINARY_CLOUD_NAME', 'dkla4wg06'
-    ),
+    'CLOUD_NAME': os.environ.get('CLOUDINARY_CLOUD_NAME'),
     'API_KEY': os.environ.get('CLOUDINARY_API_KEY'),
     'API_SECRET': os.environ.get('CLOUDINARY_API_SECRET'),
 }
 
-if all([
-    os.environ.get('CLOUDINARY_CLOUD_NAME'),
-    os.environ.get('CLOUDINARY_API_KEY'),
-    os.environ.get('CLOUDINARY_API_SECRET'),
-]):
+if not DEBUG:
+    if not all([
+        CLOUDINARY_STORAGE['CLOUD_NAME'],
+        CLOUDINARY_STORAGE['API_KEY'],
+        CLOUDINARY_STORAGE['API_SECRET'],
+    ]):
+        raise RuntimeError(
+            "Cloudinary credentials are required in production."
+        )
+
     DEFAULT_MEDIA_BACKEND = (
         'cloudinary_storage.storage.MediaCloudinaryStorage'
     )
@@ -220,6 +227,7 @@ STORAGES = {
         'BACKEND': 'whitenoise.storage.CompressedStaticFilesStorage',
     },
 }
+
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
