@@ -11,18 +11,6 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
   <style>
-    .stock-card-badge {
-      display: inline-block;
-      margin-bottom: 10px;
-      font-size: 12px;
-      font-weight: 600;
-      color: #e74c3c;
-    }
-
-    .stock-card-badge.available {
-      color: #2ecc71;
-    }
-
     .quick-add:disabled,
     .add-to-cart-btn:disabled {
       opacity: 0.5;
@@ -47,7 +35,7 @@
 
     <div class="nav-links" id="nav-links">
       <a href="/">Home</a>
-      <a href="#offers">Offers</a>
+      <a href="#offers">Benefits</a>
 
       <a href="/cart/" class="nav-cart">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="18" height="18" style="vertical-align:middle;margin-right:4px">
@@ -79,6 +67,7 @@
     <button class="hamburger" id="hamburger">&#9776;</button>
   </nav>
 
+  <!-- Hero Section -->
   <section class="hero-section">
     <div class="swiper hero-swiper">
       <div class="swiper-wrapper">
@@ -97,12 +86,12 @@
 
         <div class="swiper-slide hero-slide slide-2">
           <div class="hero-content">
-            <p class="hero-tag">🔥 Limited Deals</p>
+            <p class="hero-tag">✦ Explore Our Collection</p>
             <h1>Trending<br><span class="teal">Products</span></h1>
-            <p class="hero-sub">Up to 40% off on top-rated items this week.</p>
+            <p class="hero-sub">Discover products that complement your lifestyle.</p>
             <div class="hero-btns">
-              <a href="#offers" class="btn-gold">View Deals →</a>
-              <a href="#products" class="btn-outline">Browse All</a>
+              <a href="#products" class="btn-gold">Explore Now →</a>
+              <a href="#offers" class="btn-outline">View Benefits</a>
             </div>
           </div>
         </div>
@@ -127,10 +116,11 @@
     </div>
   </section>
 
+  <!-- Trust Bar -->
   <div class="trust-bar">
     <div class="trust-item">
       <span class="trust-icon">🚚</span>
-      <div><strong>Free Delivery</strong><span>On orders above ₹999</span></div>
+      <div><strong>Free Delivery</strong><span>On every order</span></div>
     </div>
 
     <div class="trust-item">
@@ -149,12 +139,25 @@
     </div>
   </div>
 
+  <!-- Statistics -->
   <div class="stats-bar">
-    <div class="stat"><span class="stat-num">1K+</span><span class="stat-label">Happy Customers</span></div>
-    <div class="stat"><span class="stat-num">4.9 ★</span><span class="stat-label">Avg Rating</span></div>
-    <div class="stat"><span class="stat-num">Free</span><span class="stat-label">Shipping ₹999+</span></div>
+    <div class="stat">
+      <span class="stat-num">1K+</span>
+      <span class="stat-label">Happy Customers</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-num">4.9 ★</span>
+      <span class="stat-label">Avg Rating</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-num">Free</span>
+      <span class="stat-label">Shipping on Every Order</span>
+    </div>
   </div>
 
+  <!-- Products Section -->
   <section class="section" id="products">
     <div class="section-header reveal">
       <p class="section-tag">Hand Picked</p>
@@ -213,16 +216,6 @@
             <span class="card-price">₹{{ product.price }}</span>
           </div>
 
-          {% if product.stock is None %}
-            <span class="stock-card-badge">Availability on Request</span>
-          {% elif product.stock > 0 %}
-            <span class="stock-card-badge available">
-              ✓ In Stock ({{ product.stock }})
-            </span>
-          {% else %}
-            <span class="stock-card-badge">✖ Out of Stock</span>
-          {% endif %}
-
           {% if product.stock is not None and product.stock > 0 %}
             <button
               class="add-to-cart-btn"
@@ -257,36 +250,24 @@
     </div>
   </section>
 
+  <!-- Benefits Section -->
   <section class="section offers-section" id="offers">
     <div class="section-header reveal">
-      <p class="section-tag">This Week</p>
-      <h2 class="section-title">Special <span class="gold">Offers</span></h2>
+      <p class="section-tag">Exclusive Benefits</p>
+      <h2 class="section-title">Shop <span class="gold">With More</span></h2>
     </div>
 
     <div class="offers-grid reveal">
       <div class="offer-card offer-big">
-        <p class="offer-tag">🔥 Flash Sale</p>
-        <h3>Up to <span class="gold">40% Off</span></h3>
-        <p class="offer-desc">On all Tech &amp; Accessories</p>
-        <a href="#products" class="btn-gold">Grab Deal →</a>
-      </div>
-
-      <div class="offer-card">
-        <p class="offer-tag">⚡ Today Only</p>
-        <h3>Free <span class="teal">Shipping</span></h3>
-        <p class="offer-desc">On orders above ₹999</p>
-        <a href="#products" class="btn-outline">Shop Now</a>
-      </div>
-
-      <div class="offer-card">
-        <p class="offer-tag">🎁 First Order</p>
-        <h3><span class="gold">10% Off</span></h3>
-        <p class="offer-desc">Use code <strong style="color:var(--gold)">WELCOME10</strong> on your first order</p>
-        <a href="/signup/" class="btn-outline">Sign Up</a>
+        <p class="offer-tag">✦ Glow Cart Benefit</p>
+        <h3>Free <span class="gold">Delivery</span></h3>
+        <p class="offer-desc">Enjoy free delivery on every order, with no minimum purchase required.</p>
+        <a href="#products" class="btn-gold">Shop Now →</a>
       </div>
     </div>
   </section>
 
+  <!-- Testimonials Section -->
   <section class="section testimonials-section">
     <div class="section-header reveal">
       <p class="section-tag">What They Say</p>
@@ -345,6 +326,7 @@
     {% endif %}
   </section>
 
+  <!-- Footer -->
   <footer class="footer">
     <div class="footer-top">
 
@@ -379,7 +361,7 @@
         <h4>Quick Links</h4>
         <a href="/">Home</a>
         <a href="#products">Products</a>
-        <a href="#offers">Offers</a>
+        <a href="#offers">Benefits</a>
         <a href="/faq/">FAQ</a>
       </div>
 
@@ -401,7 +383,7 @@
 
       <div class="footer-newsletter">
         <h4>Newsletter</h4>
-        <p>Get exclusive deals in your inbox.</p>
+        <p>Get exclusive updates in your inbox.</p>
         <form class="newsletter-form" onsubmit="subscribeNewsletter(event)">
           <input type="email" placeholder="your@email.com" required>
           <button type="submit">→</button>

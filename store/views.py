@@ -1,3 +1,4 @@
+
 import json
 import logging
 from datetime import timedelta
@@ -204,6 +205,12 @@ def checkout(request):
                 'error': message,
             })
 
+        # Promo codes are no longer supported
+        if promo:
+            return checkout_error(
+                'Promo codes are no longer available.'
+            )
+
         if not all([name, street, city, state, pincode, phone]):
             return checkout_error(
                 'Please complete all required delivery details.'
@@ -284,37 +291,15 @@ def checkout(request):
                         'qty': qty,
                     })
 
+                # No promo codes or discounts
                 discount = Decimal('0')
-                first_order = not Order.objects.filter(
-                    user=request.user
-                ).exists()
 
-                if promo == 'FLASH40':
-                    discount = subtotal * Decimal('0.40')
-                elif promo == 'NEW200':
-                    discount = min(Decimal('200'), subtotal)
-                elif promo == 'WELCOME10':
-                    if not first_order:
-                        raise ValueError(
-                            'WELCOME10 is only valid for first-time orders.'
-                        )
-                    discount = subtotal * Decimal('0.10')
-                elif promo:
-                    raise ValueError('Invalid promo code.')
+                # Free delivery on every order
+                shipping = Decimal('0')
 
-                discount = discount.quantize(
-                    Decimal('1'),
-                    rounding=ROUND_HALF_UP
-                )
-
-                shipping = (
-                    Decimal('0')
-                    if subtotal >= Decimal('999')
-                    else Decimal('49')
-                )
-
+                # Final amount is calculated from actual product prices
                 total = int(
-                    (subtotal - discount + shipping).quantize(
+                    subtotal.quantize(
                         Decimal('1'),
                         rounding=ROUND_HALF_UP
                     )
@@ -326,6 +311,7 @@ def checkout(request):
                     request.user.email = email
                     request.user.save(update_fields=['email'])
 
+                # Every successfully placed order is automatically confirmed
                 order = Order.objects.create(
                     user=request.user,
                     name=name,
@@ -341,6 +327,7 @@ def checkout(request):
                     status='Confirmed',
                 )
 
+                # Deduct stock after successful order creation
                 for product in products:
                     product.stock -= quantities[product.id]
                     product.save(update_fields=['stock'])

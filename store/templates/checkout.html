@@ -11,30 +11,10 @@
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
 
   <style>
-    body { background: #0D1B2A; color: #e8e8e8; }
-
-    .promo-row { display: flex; gap: 10px; }
-    .promo-row input { flex: 1; }
-
-    .promo-btn {
-      padding: 12px 18px;
-      background: rgba(212,175,55,0.12);
-      border: 1px solid rgba(212,175,55,0.3);
-      color: #D4AF37;
-      border-radius: 9px;
-      font-family: 'Poppins', sans-serif;
-      font-size: 13px;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.3s ease;
+    body {
+      background: #0D1B2A;
+      color: #e8e8e8;
     }
-
-    .promo-btn:hover { background: #D4AF37; color: #0D1B2A; }
-
-    .promo-msg { font-size: 13px; margin-top: 8px; font-weight: 600; }
-    .promo-success { color: #2ecc71; }
-    .promo-error { color: #e74c3c; }
 
     .summary-row {
       display: flex;
@@ -44,8 +24,9 @@
       color: #9a9a9a;
     }
 
-    .summary-row.discount { color: #2ecc71; }
-    .summary-row.shipping { color: #4DB6AC; }
+    .summary-row.shipping {
+      color: #4DB6AC;
+    }
 
     .summary-divider {
       border: none;
@@ -100,35 +81,16 @@
   <div id="page-content"></div>
 
   <script>
-    const PROMOS = {
-      FLASH40: {
-        type: "percent",
-        value: 40,
-        label: "40% off (Flash Sale)"
-      },
-      NEW200: {
-        type: "flat",
-        value: 200,
-        label: "₹200 off (New User)"
-      },
-      WELCOME10: {
-        type: "percent",
-        value: 10,
-        label: "10% off (Welcome Offer)"
-      }
-    };
+    // Free delivery on every order
+    const SHIPPING_CHARGE = 0;
 
-    const SHIPPING_CHARGE = 49;
-    const FREE_SHIP_ABOVE = 999;
-    const IS_FIRST_ORDER = {{ is_first_order|yesno:"true,false" }};
-
-    let appliedPromo = null;
     let cart = [];
     let items = [];
     let subtotal = 0;
 
     const pageContent = document.getElementById("page-content");
 
+    // Load cart safely
     try {
       const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
       cart = Array.isArray(storedCart) ? storedCart : [];
@@ -196,7 +158,10 @@
         "Some products in your cart are from an older cart format. Please add those products again from the website."
       );
     } else if (!items || items.length === 0) {
-      renderMessage("Your cart is empty", "Please add products before proceeding to checkout.");
+      renderMessage(
+        "Your cart is empty",
+        "Please add products before proceeding to checkout."
+      );
     } else {
 
       subtotal = items.reduce(
@@ -204,8 +169,7 @@
         0
       );
 
-      const initShipping =
-        subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE;
+      const initShipping = SHIPPING_CHARGE;
 
       const summaryRows = items.map(item => `
         <div class="checkout-item">
@@ -235,9 +199,9 @@
 
               <input type="hidden" name="items" id="items-input">
               <input type="hidden" name="total" id="total-input">
-              <input type="hidden" name="discount" id="discount-input">
-              <input type="hidden" name="shipping" id="shipping-input">
-              <input type="hidden" name="promo" id="promo-input">
+              <input type="hidden" name="discount" id="discount-input" value="0">
+              <input type="hidden" name="shipping" id="shipping-input" value="0">
+              <input type="hidden" name="promo" id="promo-input" value="">
 
               <div class="form-group">
                 <label>Full Name</label>
@@ -276,19 +240,6 @@
                 <input type="tel" name="phone" placeholder="10-digit mobile number" pattern="[0-9]{10}" maxlength="10" required>
               </div>
 
-              <div class="form-group">
-                <label>Promo Code</label>
-
-                <div class="promo-row">
-                  <input type="text" id="promo-code-input" placeholder="e.g. FLASH40 / WELCOME10" style="text-transform:uppercase;">
-                  <button type="button" class="promo-btn" id="apply-promo-btn">
-                    Apply
-                  </button>
-                </div>
-
-                <p class="promo-msg" id="promo-msg"></p>
-              </div>
-
               <button type="submit" class="place-order-btn" id="place-order-btn">
                 Place Order →
               </button>
@@ -308,16 +259,9 @@
               <span>₹${subtotal.toFixed(2)}</span>
             </div>
 
-            <div class="summary-row discount" id="discount-row" style="display:none;">
-              <span id="discount-label">Discount</span>
-              <span id="discount-val"></span>
-            </div>
-
             <div class="summary-row shipping">
               <span>Shipping</span>
-              <span id="shipping-val">
-                ${initShipping === 0 ? "₹0 (Free)" : "₹" + initShipping}
-              </span>
+              <span id="shipping-val">₹0 (Free)</span>
             </div>
 
             <hr class="summary-divider">
@@ -329,135 +273,41 @@
               </span>
             </div>
 
-            <p class="free-ship-note" id="ship-note">
-              ${initShipping === 0
-                ? "✓ Free shipping applied!"
-                : "Free shipping on orders above ₹999"}
+            <p class="free-ship-note">
+              ✓ Free delivery on every order!
             </p>
           </div>
 
         </div>
       `;
 
-      updateHiddenFields(0, initShipping);
+      updateHiddenFields();
 
-      document.getElementById("apply-promo-btn").addEventListener("click", applyPromo);
+      document.getElementById("checkout-form")
+        .addEventListener("submit", function(event) {
 
-      document.getElementById("checkout-form").addEventListener("submit", function(event) {
-        const currentItems = items.map(item => ({
-          id: item.id,
-          qty: item.qty
-        }));
+          const currentItems = items.map(item => ({
+            id: item.id,
+            qty: item.qty
+          }));
 
-        if (!currentItems.length) {
-          event.preventDefault();
-          alert("Your cart is empty.");
-          return;
-        }
+          if (!currentItems.length) {
+            event.preventDefault();
+            alert("Your cart is empty.");
+            return;
+          }
 
-        document.getElementById("items-input").value =
-          JSON.stringify(currentItems);
+          document.getElementById("items-input").value =
+            JSON.stringify(currentItems);
 
-        const button = document.getElementById("place-order-btn");
-        button.disabled = true;
-        button.textContent = "Placing Order...";
-      });
+          const button = document.getElementById("place-order-btn");
+          button.disabled = true;
+          button.textContent = "Placing Order...";
+        });
     }
 
-    function calcTotal(discount, shipping) {
-      return Math.max(0, subtotal - discount + shipping);
-    }
-
-    function applyPromo() {
-      const code = document.getElementById("promo-code-input").value.trim().toUpperCase();
-      const msg = document.getElementById("promo-msg");
-
-      if (!code) {
-        msg.className = "promo-msg promo-error";
-        msg.innerText = "Please enter a promo code.";
-        return;
-      }
-
-      if (!PROMOS[code]) {
-        msg.className = "promo-msg promo-error";
-        msg.innerText = "Invalid promo code.";
-        appliedPromo = null;
-
-        updateSummary(
-          0,
-          subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE
-        );
-        return;
-      }
-
-      if (code === "WELCOME10" && !IS_FIRST_ORDER) {
-        msg.className = "promo-msg promo-error";
-        msg.innerText = "WELCOME10 is only valid for first-time orders.";
-        appliedPromo = null;
-
-        updateSummary(
-          0,
-          subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE
-        );
-        return;
-      }
-
-      appliedPromo = {
-        code,
-        ...PROMOS[code]
-      };
-
-      msg.className = "promo-msg promo-success";
-      msg.innerText = `✓ "${code}" applied — ${appliedPromo.label}`;
-
-      let discount = 0;
-      const shipping =
-        subtotal >= FREE_SHIP_ABOVE ? 0 : SHIPPING_CHARGE;
-
-      if (appliedPromo.type === "percent") {
-        discount = subtotal * (appliedPromo.value / 100);
-      } else if (appliedPromo.type === "flat") {
-        discount = Math.min(appliedPromo.value, subtotal);
-      }
-
-      updateSummary(discount, shipping);
-    }
-
-    function updateSummary(discount, shipping) {
-      const discountRow = document.getElementById("discount-row");
-      const discountVal = document.getElementById("discount-val");
-      const discountLabel = document.getElementById("discount-label");
-      const shippingVal = document.getElementById("shipping-val");
-      const grandTotal = document.getElementById("grand-total");
-      const shipNote = document.getElementById("ship-note");
-
-      if (!discountRow) return;
-
-      if (discount > 0) {
-        discountRow.style.display = "flex";
-        discountLabel.innerText =
-          appliedPromo ? appliedPromo.label : "Discount";
-        discountVal.innerText = "-₹" + discount.toFixed(2);
-      } else {
-        discountRow.style.display = "none";
-      }
-
-      shippingVal.innerText =
-        shipping === 0 ? "₹0 (Free)" : "₹" + shipping;
-
-      grandTotal.innerText =
-        "₹" + calcTotal(discount, shipping).toFixed(2);
-
-      shipNote.innerText =
-        shipping === 0
-          ? "✓ Free shipping applied!"
-          : "Free shipping on orders above ₹999";
-
-      updateHiddenFields(discount, shipping);
-    }
-
-    function updateHiddenFields(discount, shipping) {
-      const total = calcTotal(discount, shipping);
+    function updateHiddenFields() {
+      const total = subtotal;
 
       document.getElementById("items-input").value =
         JSON.stringify(items.map(item => ({
@@ -466,12 +316,12 @@
         })));
 
       document.getElementById("total-input").value = total.toFixed(2);
-      document.getElementById("discount-input").value = discount.toFixed(2);
-      document.getElementById("shipping-input").value = shipping.toFixed(2);
-      document.getElementById("promo-input").value =
-        appliedPromo ? appliedPromo.code : "";
+      document.getElementById("discount-input").value = "0";
+      document.getElementById("shipping-input").value = "0";
+      document.getElementById("promo-input").value = "";
     }
 
+    // Mobile navigation
     document.getElementById("hamburger").addEventListener("click", () => {
       document.getElementById("nav-links").classList.toggle("open");
     });
