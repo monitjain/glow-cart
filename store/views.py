@@ -16,14 +16,7 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.utils import timezone
 
-from .models import (
-    Product,
-    Order,
-    SiteVisitor,
-    ReturnRequest,
-    Review,
-    BankDetails,
-)
+from .models import Product, ProductImage, Order, SiteVisitor, ReturnRequest, Review, BankDetails
 from .bank_security import (
     encrypt_bank_value,
     decrypt_bank_value,
@@ -174,9 +167,33 @@ def cart(request):
     return render(request, 'cart.html')
 
 
+
 def product_detail(request, id):
     track_visitor(request)
-    product = get_object_or_404(Product, id=id, is_active=True)
+
+    product = get_object_or_404(
+        Product.objects.prefetch_related('additional_images'),
+        id=id,
+        is_active=True
+    )
+
+    product_reviews = Review.objects.filter(
+        product=product,
+        is_visible=True
+    ).select_related('user').order_by('-created_at')
+
+    rating_stats = product_reviews.aggregate(
+        average=Avg('rating'),
+        count=Count('id')
+    )
+
+    return render(request, 'product.html', {
+        'product': product,
+        'product_reviews': product_reviews,
+        'average_rating': rating_stats['average'],
+        'review_count': rating_stats['count'],
+    })
+
 
     product_reviews = Review.objects.filter(
         product=product,
@@ -681,6 +698,15 @@ def manage_products(request):
                         product.image = image
 
                     product.save()
+
+                    additional_images = request.FILES.getlist('additional_images')[:4]
+
+                    for extra_image in additional_images:
+                        ProductImage.objects.create(
+                            product=product,
+                            image=extra_image
+                        )
+
                     return redirect('manage_products')
 
             except ValueError:
@@ -1331,9 +1357,11 @@ def submit_product_review(request, id):
 
 def reviews_api(request):
     reviews = Review.objects.filter(
-        is_visible=True,
-        product__isnull=True
-    ).select_related('user').order_by('-created_at')[:10]
+        is_visible=True
+    ).select_related('user').order_by(
+        '-rating',
+        '-created_at'
+    )[:10]
 
     data = [{
         'username': r.user.username,

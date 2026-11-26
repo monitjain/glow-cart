@@ -81,6 +81,9 @@
   <div id="page-content"></div>
 
   <script>
+    // Separate cart storage for each customer account and guests.
+    const CART_STORAGE_KEY = {% if user.is_authenticated %}"cart_user_{{ user.id }}"{% else %}"cart_guest"{% endif %};
+
     // Free delivery on every order
     const SHIPPING_CHARGE = 0;
 
@@ -90,9 +93,11 @@
 
     const pageContent = document.getElementById("page-content");
 
-    // Load cart safely
+    // Load the current customer's cart safely
     try {
-      const storedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+      const storedCart = JSON.parse(
+        localStorage.getItem(CART_STORAGE_KEY) || "[]"
+      );
       cart = Array.isArray(storedCart) ? storedCart : [];
     } catch (error) {
       cart = [];

@@ -1,6 +1,6 @@
 
 from django.contrib import admin
-from .models import Product, Order
+from .models import Product, ProductImage, Order
 
 
 class StockStatusFilter(admin.SimpleListFilter):
@@ -24,6 +24,14 @@ class StockStatusFilter(admin.SimpleListFilter):
         return queryset
 
 
+class ProductImageInline(admin.TabularInline):
+    model = ProductImage
+    extra = 4
+    fields = ('image', 'alt_text')
+    verbose_name = 'Additional Product Image'
+    verbose_name_plural = 'Additional Product Images'
+
+
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('name', 'price', 'sku', 'stock', 'is_active')
@@ -34,6 +42,7 @@ class ProductAdmin(admin.ModelAdmin):
     list_per_page = 25
 
     fields = ('name', 'price', 'sku', 'stock', 'is_active', 'image', 'description')
+    inlines = [ProductImageInline]
 
 
 @admin.register(Order)

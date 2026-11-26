@@ -91,9 +91,12 @@
   </div>
 
   <script>
+    // Separate cart storage for every customer account and guests.
+    const CART_STORAGE_KEY = {% if user.is_authenticated %}"cart_user_{{ user.id }}"{% else %}"cart_guest"{% endif %};
+
     function getCart() {
       try {
-        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        const cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY)) || [];
         return Array.isArray(cart) ? cart : [];
       } catch (error) {
         return [];
@@ -101,7 +104,7 @@
     }
 
     function saveCart(cart) {
-      localStorage.setItem("cart", JSON.stringify(cart));
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
     }
 
     function getStockLimit(item) {

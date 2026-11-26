@@ -25,9 +25,61 @@
       letter-spacing: 2px;
     }
 
-    .rating-number {
-      color: #777;
-      font-size: 13px;
+    /* PRODUCT IMAGE GALLERY */
+    .product-gallery {
+      width: 100%;
+      min-width: 0;
+    }
+
+    .product-gallery .product-img {
+      width: 100%;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+
+    .product-gallery .product-img img {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-height: 600px;
+      object-fit: contain;
+      transition: opacity 0.2s ease;
+    }
+
+    .product-thumbnails {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .thumbnail {
+      width: 75px;
+      height: 75px;
+      padding: 3px;
+      border: 2px solid #e5e5e5;
+      border-radius: 9px;
+      background: #fff;
+      cursor: pointer;
+      overflow: hidden;
+      transition: border-color 0.2s ease, transform 0.2s ease;
+    }
+
+    .thumbnail:hover {
+      transform: translateY(-2px);
+      border-color: #d4af37;
+    }
+
+    .thumbnail.active {
+      border-color: #d4af37;
+    }
+
+    .thumbnail img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      border-radius: 5px;
     }
 
     .product-reviews {
@@ -128,6 +180,11 @@
         margin: 25px 12px;
         padding: 18px;
       }
+
+      .thumbnail {
+        width: 65px;
+        height: 65px;
+      }
     }
   </style>
 </head>
@@ -172,22 +229,60 @@
 
   <div class="product-container">
 
-    <div class="product-img">
-      {% if product.image %}
-        <img
-          src="{{ product.image.url }}"
-          alt="{{ product.name|escape }}"
-          id="product-img"
-          onerror="this.onerror=null;this.src='https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable';"
-        >
-      {% else %}
-        <img
-          src="https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable"
-          alt="{{ product.name|escape }}"
-          id="product-img"
-        >
-      {% endif %}
+    <!-- PRODUCT IMAGE GALLERY -->
+    <div class="product-gallery">
+
+      <div class="product-img">
+        {% if product.image %}
+          <img
+            src="{{ product.image.url }}"
+            alt="{{ product.name|escape }}"
+            id="product-img"
+            onerror="this.onerror=null;this.src='https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable';"
+          >
+        {% else %}
+          <img
+            src="https://placehold.co/600x600/162030/D4AF37?text=Image+Unavailable"
+            alt="{{ product.name|escape }}"
+            id="product-img"
+          >
+        {% endif %}
+      </div>
+
+      <div class="product-thumbnails">
+
+        {% if product.image %}
+          <button
+            type="button"
+            class="thumbnail active"
+            data-image-url="{{ product.image.url }}"
+            data-image-alt="{{ product.name|escape }}"
+            aria-label="View main product image"
+            aria-pressed="true"
+          >
+            <img src="{{ product.image.url }}" alt="">
+          </button>
+        {% endif %}
+
+        {% for extra_image in product.additional_images.all %}
+          <button
+            type="button"
+            class="thumbnail"
+            data-image-url="{{ extra_image.image.url }}"
+            data-image-alt="{{ extra_image.alt_text|default:product.name|escape }}"
+            aria-label="View product image {{ forloop.counter|add:1 }}"
+            aria-pressed="false"
+          >
+            <img
+              src="{{ extra_image.image.url }}"
+              alt="{{ extra_image.alt_text|default:product.name|escape }}"
+            >
+          </button>
+        {% endfor %}
+
+      </div>
     </div>
+
 
     <div class="product-details">
 
@@ -377,6 +472,9 @@
 
 
   <script>
+    // Separate cart storage for each customer account and guests.
+    const CART_STORAGE_KEY = {% if user.is_authenticated %}"cart_user_{{ user.id }}"{% else %}"cart_guest"{% endif %};
+
     // Render stars according to the actual rating
     document.querySelectorAll('.rating-stars, .review-stars').forEach(element => {
       const rating = Math.max(
@@ -389,9 +487,48 @@
     });
 
 
+    // PRODUCT GALLERY: switch the main image when a thumbnail is clicked
+    const mainProductImage = document.getElementById("product-img");
+    const productThumbnails = document.querySelectorAll(".thumbnail");
+
+    productThumbnails.forEach(thumbnail => {
+      thumbnail.addEventListener("click", function () {
+        const imageUrl = this.dataset.imageUrl;
+        const imageAlt = this.dataset.imageAlt;
+
+        if (!imageUrl || !mainProductImage) return;
+
+        mainProductImage.style.opacity = "0.4";
+
+        const newImage = new Image();
+
+        newImage.onload = function () {
+          mainProductImage.src = imageUrl;
+          mainProductImage.alt = imageAlt || "";
+          mainProductImage.style.opacity = "1";
+        };
+
+        newImage.onerror = function () {
+          mainProductImage.style.opacity = "1";
+        };
+
+        newImage.src = imageUrl;
+
+        productThumbnails.forEach(item => {
+          item.classList.remove("active");
+          item.setAttribute("aria-pressed", "false");
+        });
+
+        this.classList.add("active");
+        this.setAttribute("aria-pressed", "true");
+      });
+    });
+
+
+    // CART FUNCTIONS
     function getCart() {
       try {
-        const cart = JSON.parse(localStorage.getItem("cart"));
+        const cart = JSON.parse(localStorage.getItem(CART_STORAGE_KEY));
         return Array.isArray(cart) ? cart : [];
       } catch (error) {
         return [];
@@ -399,7 +536,7 @@
     }
 
     function saveCart(cart) {
-      localStorage.setItem("cart", JSON.stringify(cart));
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cart));
       updateCount();
     }
 
