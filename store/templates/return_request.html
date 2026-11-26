@@ -1,3 +1,4 @@
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -5,12 +6,117 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Return / Exchange — Glow Cart</title>
+
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
+
+  <style>
+    .refund-section {
+      margin: 20px 0;
+      padding: 18px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.025);
+    }
+
+    .refund-section h3 {
+      font-size: 16px;
+      margin-bottom: 8px;
+      color: var(--gold);
+    }
+
+    .refund-info {
+      color: var(--text-muted);
+      font-size: 12px;
+      line-height: 1.7;
+      margin-bottom: 16px;
+    }
+
+    .refund-option {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 13px;
+      margin-bottom: 10px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      cursor: pointer;
+      background: rgba(255,255,255,0.025);
+    }
+
+    .refund-option input {
+      margin-top: 5px;
+      accent-color: var(--gold);
+    }
+
+    .refund-option strong {
+      color: var(--text);
+      font-size: 13px;
+    }
+
+    .refund-option small {
+      display: block;
+      color: var(--text-muted);
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    .refund-fields {
+      margin-top: 16px;
+    }
+
+    .refund-fields input {
+      width: 100%;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      font-family: 'Poppins', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      outline: none;
+      box-sizing: border-box;
+    }
+
+    .refund-fields input:focus {
+      border-color: var(--gold);
+    }
+
+    .refund-fields label {
+      display: block;
+      font-size: 12px;
+      margin-bottom: 7px;
+      color: var(--text-muted);
+    }
+
+    .refund-fields .form-group {
+      margin-bottom: 14px;
+    }
+
+    .security-note {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-top: 12px;
+    }
+
+    .request-error {
+      padding: 12px 14px;
+      margin-bottom: 18px;
+      border-radius: 9px;
+      background: rgba(220, 70, 70, 0.10);
+      border: 1px solid rgba(220, 70, 70, 0.35);
+      color: #ff9b9b;
+      font-size: 13px;
+    }
+  </style>
 </head>
+
 <body>
+
   <nav class="navbar scrolled">
     <a href="/" class="logo">Glow Cart <span class="logo-star">✦</span></a>
+
     <div class="nav-links">
       <a href="/">Home</a>
       <a href="/orders/">My Orders</a>
@@ -19,42 +125,325 @@
 
   <div class="auth-wrapper" style="max-width:560px;">
     <div class="auth-card">
-      <h2 style="text-align:center;margin-bottom:6px;">🔄 Return / Exchange</h2>
-      <p class="auth-sub">Order #{{ order.id }} — ₹{{ order.total }}</p>
+
+      <h2 style="text-align:center;margin-bottom:6px;">
+        🔄 Return / Exchange
+      </h2>
+
+      <p class="auth-sub">
+        Order #{{ order.id }} — ₹{{ order.total }}
+      </p>
 
       {% if existing %}
+
         <div style="background:rgba(77,182,172,0.1);border:1px solid rgba(77,182,172,0.3);border-radius:10px;padding:20px;text-align:center;margin-bottom:20px;">
-          <p style="color:var(--teal);font-weight:600;font-size:15px;margin-bottom:10px;">✅ Request Already Submitted</p>
-          <p style="color:var(--text-muted);font-size:14px;">You have already submitted a <strong style="color:var(--text);">{{ existing.request_type }}</strong> request for this order.</p>
+
+          <p style="color:var(--teal);font-weight:600;font-size:15px;margin-bottom:10px;">
+            ✅ Request Already Submitted
+          </p>
+
+          <p style="color:var(--text-muted);font-size:14px;">
+            You have already submitted a
+            <strong style="color:var(--text);">
+              {{ existing.request_type }}
+            </strong>
+            request for this order.
+          </p>
+
           <div style="margin-top:14px;padding:12px;background:var(--card-bg);border-radius:8px;text-align:left;">
-            <p style="font-size:13px;color:var(--text-muted);">Type: <span style="color:var(--text);">{{ existing.request_type }}</span></p>
-            <p style="font-size:13px;color:var(--text-muted);">Status: <span class="badge badge-{{ existing.status|lower }}">{{ existing.status }}</span></p>
-            <p style="font-size:13px;color:var(--text-muted);">Reason: <span style="color:var(--text);">{{ existing.reason }}</span></p>
+
+            <p style="font-size:13px;color:var(--text-muted);">
+              Type:
+              <span style="color:var(--text);">
+                {{ existing.request_type }}
+              </span>
+            </p>
+
+            <p style="font-size:13px;color:var(--text-muted);">
+              Status:
+              <span class="badge badge-{{ existing.status|lower }}">
+                {{ existing.status }}
+              </span>
+            </p>
+
+            <p style="font-size:13px;color:var(--text-muted);">
+              Reason:
+              <span style="color:var(--text);">
+                {{ existing.reason }}
+              </span>
+            </p>
+
             {% if existing.admin_note %}
-            <p style="font-size:13px;color:var(--text-muted);">Admin Note: <span style="color:var(--gold);">{{ existing.admin_note }}</span></p>
+              <p style="font-size:13px;color:var(--text-muted);">
+                Admin Note:
+                <span style="color:var(--gold);">
+                  {{ existing.admin_note }}
+                </span>
+              </p>
             {% endif %}
+
           </div>
         </div>
+
       {% else %}
+
+        {% if error %}
+          <div class="request-error">
+            ⚠️ {{ error }}
+          </div>
+        {% endif %}
+
         <form method="POST">
           {% csrf_token %}
+
+          <!-- Request type -->
           <div class="form-group">
+
             <label>Request Type</label>
-            <select name="request_type" required style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);">
+
+            <select
+              name="request_type"
+              id="requestType"
+              required
+              style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);"
+            >
               <option value="Return">Return — I want to return the product</option>
               <option value="Exchange">Exchange — I want a different product</option>
               <option value="Replace">Replace — Product is damaged/defective</option>
             </select>
+
           </div>
+
+          <!-- Reason -->
           <div class="form-group">
+
             <label>Reason</label>
-            <textarea name="reason" placeholder="Please describe the issue in detail..." required style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);resize:vertical;min-height:120px;"></textarea>
+
+            <textarea
+              name="reason"
+              placeholder="Please describe the issue in detail..."
+              required
+              style="width:100%;padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:9px;font-family:'Poppins',sans-serif;font-size:14px;color:var(--text);resize:vertical;min-height:120px;"
+            ></textarea>
+
           </div>
-          <button type="submit" class="auth-btn">Submit Request →</button>
+
+          <!-- Refund account section -->
+          <div class="refund-section" id="refundSection">
+
+            <h3>🏦 Refund Bank Details</h3>
+
+            <p class="refund-info">
+              Please provide the bank account where you would like to
+              receive your refund if your return is approved.
+            </p>
+
+            {% if bank_details %}
+
+              <label class="refund-option">
+
+                <input
+                  type="radio"
+                  name="refund_account_choice"
+                  value="saved"
+                  checked
+                >
+
+                <span>
+                  <strong>Use my saved bank account</strong>
+
+                  <small>
+                    Account ending in •••• {{ bank_details.account_last4 }}
+                  </small>
+                </span>
+
+              </label>
+
+              <label class="refund-option">
+
+                <input
+                  type="radio"
+                  name="refund_account_choice"
+                  value="new"
+                >
+
+                <span>
+                  <strong>Use a different bank account</strong>
+
+                  <small>
+                    Enter another account for this refund.
+                  </small>
+                </span>
+
+              </label>
+
+            {% else %}
+
+              <input
+                type="hidden"
+                name="refund_account_choice"
+                value="new"
+              >
+
+              <p style="font-size:13px;color:var(--text-muted);margin-bottom:14px;">
+                You haven't saved any bank details yet. Enter your refund
+                account details below.
+              </p>
+
+            {% endif %}
+
+            <!-- New account fields -->
+            <div class="refund-fields" id="newBankFields">
+
+              <div class="form-group">
+                <label>Account Holder Name *</label>
+
+                <input
+                  type="text"
+                  name="refund_account_holder"
+                  id="refundHolder"
+                  maxlength="100"
+                  placeholder="Name as registered with your bank"
+                >
+              </div>
+
+              <div class="form-group">
+                <label>Bank Name</label>
+
+                <input
+                  type="text"
+                  name="refund_bank_name"
+                  maxlength="100"
+                  placeholder="Enter your bank name"
+                >
+              </div>
+
+              <div class="form-group">
+                <label>Account Number *</label>
+
+                <input
+                  type="password"
+                  name="refund_account_number"
+                  id="refundAccount"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  maxlength="18"
+                  placeholder="Enter bank account number"
+                >
+              </div>
+
+              <div class="form-group">
+                <label>Confirm Account Number *</label>
+
+                <input
+                  type="password"
+                  name="confirm_refund_account_number"
+                  id="confirmRefundAccount"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  maxlength="18"
+                  placeholder="Re-enter bank account number"
+                >
+              </div>
+
+              <div class="form-group">
+                <label>IFSC Code *</label>
+
+                <input
+                  type="text"
+                  name="refund_ifsc"
+                  id="refundIFSC"
+                  maxlength="11"
+                  autocapitalize="characters"
+                  placeholder="Example: SBIN0001234"
+                >
+              </div>
+
+            </div>
+
+            <p class="security-note">
+              🔒 Your bank details are encrypted before being stored.
+              Only the last four digits are displayed in your account.
+              Never enter your ATM PIN, CVV, OTP or UPI PIN.
+            </p>
+
+          </div>
+
+          <button type="submit" class="auth-btn">
+            Submit Request →
+          </button>
+
         </form>
+
       {% endif %}
-      <div class="auth-footer"><a href="/orders/">← Back to My Orders</a></div>
+
+      <div class="auth-footer">
+        <a href="/orders/">← Back to My Orders</a>
+      </div>
+
     </div>
   </div>
+
+  <script>
+    const requestType = document.getElementById('requestType');
+    const refundSection = document.getElementById('refundSection');
+    const newBankFields = document.getElementById('newBankFields');
+
+    const savedAccountChoice = document.querySelector(
+      'input[name="refund_account_choice"][value="saved"]'
+    );
+
+    const newAccountChoice = document.querySelector(
+      'input[name="refund_account_choice"][value="new"]'
+    );
+
+    const bankInputs = [
+      document.getElementById('refundHolder'),
+      document.getElementById('refundAccount'),
+      document.getElementById('confirmRefundAccount'),
+      document.getElementById('refundIFSC')
+    ];
+
+    function updateRefundForm() {
+
+      if (!requestType || !refundSection) {
+        return;
+      }
+
+      const isReturn = requestType.value === 'Return';
+
+      refundSection.style.display = isReturn ? 'block' : 'none';
+
+      const useNewAccount = !savedAccountChoice || (
+        newAccountChoice && newAccountChoice.checked
+      );
+
+      if (newBankFields) {
+        newBankFields.style.display =
+          isReturn && useNewAccount ? 'block' : 'none';
+      }
+
+      bankInputs.forEach(function(input) {
+        if (input) {
+          input.required = isReturn && useNewAccount;
+        }
+      });
+    }
+
+    if (requestType) {
+      requestType.addEventListener('change', updateRefundForm);
+    }
+
+    if (savedAccountChoice) {
+      savedAccountChoice.addEventListener('change', updateRefundForm);
+    }
+
+    if (newAccountChoice) {
+      newAccountChoice.addEventListener('change', updateRefundForm);
+    }
+
+    updateRefundForm();
+  </script>
+
 </body>
 </html>

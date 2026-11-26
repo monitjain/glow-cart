@@ -1,11 +1,13 @@
 
 import json
 import logging
+import re
 from datetime import timedelta
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth import login
+from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.db.models import Sum, Avg, Count, F
@@ -14,7 +16,18 @@ from django.core.mail import send_mail
 from django.http import JsonResponse
 from django.utils import timezone
 
-from .models import Product, Order, SiteVisitor, ReturnRequest, Review
+from .models import (
+    Product,
+    Order,
+    SiteVisitor,
+    ReturnRequest,
+    Review,
+    BankDetails,
+)
+from .bank_security import (
+    encrypt_bank_value,
+    decrypt_bank_value,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -205,7 +218,6 @@ def checkout(request):
                 'error': message,
             })
 
-        # Promo codes are no longer supported
         if promo:
             return checkout_error(
                 'Promo codes are no longer available.'
@@ -291,13 +303,9 @@ def checkout(request):
                         'qty': qty,
                     })
 
-                # No promo codes or discounts
                 discount = Decimal('0')
-
-                # Free delivery on every order
                 shipping = Decimal('0')
 
-                # Final amount is calculated from actual product prices
                 total = int(
                     subtotal.quantize(
                         Decimal('1'),
@@ -311,7 +319,6 @@ def checkout(request):
                     request.user.email = email
                     request.user.save(update_fields=['email'])
 
-                # Every successfully placed order is automatically confirmed
                 order = Order.objects.create(
                     user=request.user,
                     name=name,
@@ -327,7 +334,6 @@ def checkout(request):
                     status='Confirmed',
                 )
 
-                # Deduct stock after successful order creation
                 for product in products:
                     product.stock -= quantities[product.id]
                     product.save(update_fields=['stock'])
@@ -429,7 +435,6 @@ def my_orders(request):
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
 def dashboard(request):
-    # Clean up stale visitors (inactive > 5 minutes)
     cutoff = timezone.now() - timedelta(minutes=5)
     SiteVisitor.objects.filter(last_seen__lt=cutoff).delete()
 
@@ -458,7 +463,13 @@ def dashboard(request):
     pending_returns = ReturnRequest.objects.filter(
         status='Pending'
     ).count()
-
+    pending_refunds = ReturnRequest.objects.filter(
+    request_type='Return',
+    status__in=['Approved', 'Completed'],
+    refund_status='Pending'
+).exclude(
+    refund_account_number_encrypted=''
+).count()
     return_counts = {
         'Return': ReturnRequest.objects.filter(
             request_type='Return',
@@ -483,6 +494,7 @@ def dashboard(request):
         'total_revenue': total_revenue,
         'total_users': total_users,
         'total_products': total_products,
+        'pending_refunds': pending_refunds,
         'status_counts': status_counts,
         'latest_orders': latest_orders,
         'live_count': live_count,
@@ -520,7 +532,6 @@ def manage_orders(request):
         'user'
     ).order_by('-created_at', '-id')
 
-    # Search orders
     search_query = request.GET.get('q', '').strip()
 
     if search_query:
@@ -532,7 +543,6 @@ def manage_orders(request):
             models.Q(id__icontains=search_query)
         )
 
-    # Filter by status
     status_filter = request.GET.get('status', '').strip()
     valid_statuses = [
         'Pending', 'Confirmed', 'Shipped', 'Delivered'
@@ -541,7 +551,6 @@ def manage_orders(request):
     if status_filter in valid_statuses:
         all_orders = all_orders.filter(status=status_filter)
 
-    # Order summary counts
     total_orders = Order.objects.count()
     pending_orders = Order.objects.filter(status='Pending').count()
     confirmed_orders = Order.objects.filter(status='Confirmed').count()
@@ -598,7 +607,6 @@ def update_order_status(request, order_id):
 
             order.save()
 
-            # Send email only when status actually changes
             if new_status != old_status:
                 recipient = order.user.email if order.user else ''
 
@@ -723,7 +731,7 @@ def manage_customers(request):
     )
 
 
-# ── Return / Exchange / Replace ─────────────────────────────────
+# ── Return / Exchange / Replace ───────────────────────────────
 
 @login_required
 def submit_return_request(request, order_id):
@@ -736,38 +744,193 @@ def submit_return_request(request, order_id):
     if order.status != 'Delivered':
         return redirect('orders')
 
-    # Block if request already exists for this order
     existing = ReturnRequest.objects.filter(
         order=order,
         user=request.user
     ).first()
 
+    bank_details = BankDetails.objects.filter(
+        user=request.user
+    ).first()
+
     if request.method == 'POST':
+
         request_type = request.POST.get('request_type')
         reason = request.POST.get('reason', '').strip()
 
-        if (
-            request_type in ['Return', 'Exchange', 'Replace']
-            and reason
-            and not existing
-        ):
-            rr = ReturnRequest.objects.create(
-                order=order,
-                user=request.user,
-                request_type=request_type,
-                reason=reason
+        if existing:
+            return redirect('orders')
+
+        if request_type not in ['Return', 'Exchange', 'Replace']:
+            return render(request, 'return_request.html', {
+                'order': order,
+                'existing': existing,
+                'bank_details': bank_details,
+                'error': 'Please select a valid request type.'
+            })
+
+        if not reason:
+            return render(request, 'return_request.html', {
+                'order': order,
+                'existing': existing,
+                'bank_details': bank_details,
+                'error': 'Please enter a reason for your request.'
+            })
+
+        refund_values = {}
+
+        # Bank details are required only for Return requests
+        if request_type == 'Return':
+
+            account_choice = request.POST.get(
+                'refund_account_choice',
+                'saved' if bank_details else 'new'
             )
 
-            recipient = request.user.email
+            if account_choice == 'saved' and bank_details:
 
-            if recipient:
-                send_return_email(rr, recipient, event='submitted')
+                # Copy encrypted saved details into this return request
+                refund_values = {
+                    'refund_account_holder_encrypted':
+                        bank_details.account_holder_encrypted,
+
+                    'refund_account_number_encrypted':
+                        bank_details.account_number_encrypted,
+
+                    'refund_ifsc_encrypted':
+                        bank_details.ifsc_encrypted,
+
+                    'refund_bank_name_encrypted':
+                        bank_details.bank_name_encrypted,
+
+                    'refund_account_last4':
+                        bank_details.account_last4,
+                }
+
+            elif account_choice == 'new':
+
+                account_holder = request.POST.get(
+                    'refund_account_holder', ''
+                ).strip()
+
+                account_number = request.POST.get(
+                    'refund_account_number', ''
+                ).strip().replace(' ', '').replace('-', '')
+
+                confirm_account_number = request.POST.get(
+                    'confirm_refund_account_number', ''
+                ).strip().replace(' ', '').replace('-', '')
+
+                ifsc = request.POST.get(
+                    'refund_ifsc', ''
+                ).strip().upper()
+
+                bank_name = request.POST.get(
+                    'refund_bank_name', ''
+                ).strip()
+
+                error = None
+
+                if not 2 <= len(account_holder) <= 100:
+                    error = 'Please enter a valid account holder name.'
+
+                elif not re.fullmatch(r'[0-9]{6,18}', account_number):
+                    error = 'Account number must contain 6 to 18 digits.'
+
+                elif account_number != confirm_account_number:
+                    error = 'Account numbers do not match.'
+
+                elif not re.fullmatch(r'[A-Z]{4}0[A-Z0-9]{6}', ifsc):
+                    error = 'Please enter a valid 11-character IFSC code.'
+
+                elif len(bank_name) > 100:
+                    error = 'Bank name must be 100 characters or fewer.'
+
+                if error:
+                    return render(request, 'return_request.html', {
+                        'order': order,
+                        'existing': existing,
+                        'bank_details': bank_details,
+                        'error': error
+                    })
+
+                # Encrypt refund details before saving the request
+                refund_values = {
+                    'refund_account_holder_encrypted':
+                        encrypt_bank_value(account_holder),
+
+                    'refund_account_number_encrypted':
+                        encrypt_bank_value(account_number),
+
+                    'refund_ifsc_encrypted':
+                        encrypt_bank_value(ifsc),
+
+                    'refund_bank_name_encrypted':
+                        encrypt_bank_value(bank_name),
+
+                    'refund_account_last4':
+                        account_number[-4:],
+                }
+                
+
+                # Save first-time bank details to the customer's profile.
+                # Never overwrite an existing saved account.
+                if not bank_details:
+                    BankDetails.objects.get_or_create(
+                        user=request.user,
+                        defaults={
+                            'account_holder_encrypted':
+                                refund_values['refund_account_holder_encrypted'],
+                            'account_number_encrypted':
+                                refund_values['refund_account_number_encrypted'],
+                            'ifsc_encrypted':
+                                refund_values['refund_ifsc_encrypted'],
+                            'bank_name_encrypted':
+                                refund_values['refund_bank_name_encrypted'],
+                            'account_last4':
+                                refund_values['refund_account_last4'],
+                        }
+                    )
+
+            else:
+                return render(request, 'return_request.html', {
+                    'order': order,
+                    'existing': existing,
+                    'bank_details': bank_details,
+                    'error': 'Please select a valid refund account.'
+                })
+
+                return render(request, 'return_request.html', {
+                    'order': order,
+                    'existing': existing,
+                    'bank_details': bank_details,
+                    'error': 'Please select a valid refund account.'
+                })
+
+        # Create the request with its own encrypted refund snapshot
+        rr = ReturnRequest.objects.create(
+            order=order,
+            user=request.user,
+            request_type=request_type,
+            reason=reason,
+            **refund_values
+        )
+
+        recipient = request.user.email
+
+        if recipient:
+            send_return_email(
+                rr,
+                recipient,
+                event='submitted'
+            )
 
         return redirect('orders')
 
     return render(request, 'return_request.html', {
         'order': order,
-        'existing': existing
+        'existing': existing,
+        'bank_details': bank_details
     })
 
 
@@ -780,6 +943,174 @@ def manage_returns(request):
     return render(request, 'manage_returns.html', {
         'requests': requests
     })
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def manage_refunds(request):
+    refunds = ReturnRequest.objects.filter(
+        request_type='Return',
+        status__in=['Approved', 'Completed'],
+    ).exclude(
+        refund_account_number_encrypted=''
+    ).select_related(
+        'order', 'user'
+    ).order_by('-created_at')
+
+    pending_refunds = refunds.filter(
+        refund_status='Pending'
+    ).count()
+
+    return render(request, 'manage_refunds.html', {
+        'refunds': refunds,
+        'pending_refunds': pending_refunds,
+    })
+
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def refund_details(request, rr_id):
+    rr = get_object_or_404(
+        ReturnRequest.objects.select_related('order', 'user'),
+        id=rr_id,
+        request_type='Return',
+        status__in=['Approved', 'Completed'],
+    )
+
+    if not rr.refund_account_number_encrypted:
+        messages.error(request, 'Bank details are not available for this request.')
+        return redirect('manage_refunds')
+
+    # Record access without logging any sensitive bank information.
+    logger.info(
+        'Refund bank details accessed by staff user_id=%s for return_request_id=%s',
+        request.user.id,
+        rr.id,
+    )
+
+    try:
+        bank_details = {
+            'account_holder': decrypt_bank_value(
+                rr.refund_account_holder_encrypted
+            ),
+            'account_number': decrypt_bank_value(
+                rr.refund_account_number_encrypted
+            ),
+            'ifsc': decrypt_bank_value(
+                rr.refund_ifsc_encrypted
+            ),
+            'bank_name': decrypt_bank_value(
+                rr.refund_bank_name_encrypted
+            ),
+        }
+    except Exception:
+        logger.exception(
+            'Unable to decrypt refund details for return_request_id=%s',
+            rr.id,
+        )
+        messages.error(
+            request,
+            'Unable to read bank details. Please check the encryption configuration.'
+        )
+        return redirect('manage_refunds')
+
+    return render(request, 'refund_details.html', {
+        'rr': rr,
+        'bank_details': bank_details,
+    })
+
+
+@user_passes_test(lambda u: u.is_staff, login_url='/login/')
+def update_refund(request, rr_id):
+    if request.method != 'POST':
+        return redirect('manage_refunds')
+
+    with transaction.atomic():
+        rr = get_object_or_404(
+            ReturnRequest.objects.select_for_update().select_related('order'),
+            id=rr_id,
+            request_type='Return',
+            status__in=['Approved', 'Completed'],
+        )
+
+        if rr.refund_status == 'Completed':
+            messages.error(request, 'This refund is already marked as completed.')
+            return redirect('refund_details', rr_id=rr.id)
+
+        new_status = request.POST.get('refund_status', '').strip()
+        amount_input = request.POST.get('refund_amount', '').strip()
+        transaction_reference = request.POST.get(
+            'refund_transaction_reference', ''
+        ).strip()
+        admin_note = request.POST.get('refund_admin_note', '').strip()
+
+        if new_status not in ['Pending', 'Processing', 'Completed', 'Failed']:
+            messages.error(request, 'Invalid refund status.')
+            return redirect('refund_details', rr_id=rr.id)
+
+        refund_amount = None
+
+        if amount_input:
+            try:
+                refund_amount = Decimal(amount_input).quantize(
+                    Decimal('0.01'),
+                    rounding=ROUND_HALF_UP,
+                )
+            except InvalidOperation:
+                messages.error(request, 'Please enter a valid refund amount.')
+                return redirect('refund_details', rr_id=rr.id)
+
+            if refund_amount <= 0:
+                messages.error(request, 'Refund amount must be greater than zero.')
+                return redirect('refund_details', rr_id=rr.id)
+
+            if refund_amount > rr.order.total:
+                messages.error(
+                    request,
+                    'Refund amount cannot exceed the order total.'
+                )
+                return redirect('refund_details', rr_id=rr.id)
+
+        if new_status in ['Processing', 'Completed'] and refund_amount is None:
+            messages.error(
+                request,
+                'Enter the refund amount before processing the refund.'
+            )
+            return redirect('refund_details', rr_id=rr.id)
+
+        if new_status == 'Completed':
+            if not transaction_reference:
+                messages.error(
+                    request,
+                    'Enter the bank/payment transaction reference before completing the refund.'
+                )
+                return redirect('refund_details', rr_id=rr.id)
+
+            if len(transaction_reference) > 100:
+                messages.error(
+                    request,
+                    'Transaction reference cannot exceed 100 characters.'
+                )
+                return redirect('refund_details', rr_id=rr.id)
+
+        rr.refund_status = new_status
+        rr.refund_amount = refund_amount
+        rr.refund_transaction_reference = transaction_reference
+        rr.refund_admin_note = admin_note
+        rr.refund_updated_by = request.user
+        rr.refund_processed_at = (
+            timezone.now() if new_status == 'Completed' else None
+        )
+
+        rr.save(update_fields=[
+            'refund_status',
+            'refund_amount',
+            'refund_transaction_reference',
+            'refund_admin_note',
+            'refund_updated_by',
+            'refund_processed_at',
+        ])
+
+    messages.success(request, 'Refund information updated successfully.')
+    return redirect('refund_details', rr_id=rr.id)
+
 
 
 @user_passes_test(lambda u: u.is_staff, login_url='/login/')
@@ -796,6 +1127,24 @@ def update_return_status(request, rr_id):
             old_status = rr.status
             rr.status = new_status
             rr.admin_note = admin_note
+
+            # Automatically enable refund tracking when a return is approved.
+            if (
+                new_status == 'Approved'
+                and rr.request_type == 'Return'
+                and rr.refund_account_number_encrypted
+                and rr.refund_status == 'Not Applicable'
+            ):
+                rr.refund_status = 'Pending'
+
+            # Cancel an unprocessed pending refund if the return is rejected.
+            if (
+                new_status == 'Rejected'
+                and rr.request_type == 'Return'
+                and rr.refund_status == 'Pending'
+            ):
+                rr.refund_status = 'Not Applicable'
+
             rr.save()
 
             if new_status != old_status:
@@ -809,6 +1158,7 @@ def update_return_status(request, rr_id):
                     )
 
     return redirect('manage_returns')
+
 
 
 def send_return_email(rr, recipient, event='submitted'):
@@ -1024,6 +1374,10 @@ def user_dashboard(request):
         user=request.user
     ).select_related('order').order_by('-created_at')
 
+    bank_details = BankDetails.objects.filter(
+        user=request.user
+    ).first()
+
     reviews = Review.objects.filter(
         user=request.user
     ).order_by('-created_at')
@@ -1035,7 +1389,122 @@ def user_dashboard(request):
     return render(request, 'user_dashboard.html', {
         'orders': parsed_orders,
         'return_requests': return_requests,
+        'bank_details': bank_details,
         'reviews': reviews,
         'total_spent': total_spent,
         'total_orders': orders.count(),
     })
+
+
+@login_required
+def manage_bank_details(request):
+    if request.method != 'POST':
+        return redirect('user_dashboard')
+
+    action = request.POST.get('action', 'save')
+
+    bank_details = BankDetails.objects.filter(
+        user=request.user
+    ).first()
+
+    if action == 'delete':
+        if bank_details:
+            bank_details.delete()
+            messages.success(
+                request,
+                'Your saved bank details have been deleted.'
+            )
+        return redirect('user_dashboard')
+
+    account_holder = request.POST.get(
+        'account_holder', ''
+    ).strip()
+
+    account_number = request.POST.get(
+        'account_number', ''
+    ).strip().replace(' ', '').replace('-', '')
+
+    confirm_account_number = request.POST.get(
+        'confirm_account_number', ''
+    ).strip().replace(' ', '').replace('-', '')
+
+    ifsc = request.POST.get('ifsc', '').strip().upper()
+    bank_name = request.POST.get('bank_name', '').strip()
+
+    if not 2 <= len(account_holder) <= 100:
+        messages.error(
+            request,
+            'Please enter a valid account holder name.'
+        )
+        return redirect('user_dashboard')
+
+    if not re.fullmatch(r'[A-Z]{4}0[A-Z0-9]{6}', ifsc):
+        messages.error(
+            request,
+            'Please enter a valid 11-character IFSC code.'
+        )
+        return redirect('user_dashboard')
+
+    if bank_name and len(bank_name) > 100:
+        messages.error(
+            request,
+            'Bank name must be 100 characters or fewer.'
+        )
+        return redirect('user_dashboard')
+
+    if account_number:
+        if not re.fullmatch(r'[0-9]{6,18}', account_number):
+            messages.error(
+                request,
+                'Account number must contain 6 to 18 digits.'
+            )
+            return redirect('user_dashboard')
+
+        if account_number != confirm_account_number:
+            messages.error(
+                request,
+                'Account numbers do not match.'
+            )
+            return redirect('user_dashboard')
+
+    elif not bank_details:
+        messages.error(
+            request,
+            'Please enter your bank account number.'
+        )
+        return redirect('user_dashboard')
+
+    encrypted_values = {
+        'account_holder_encrypted': encrypt_bank_value(account_holder),
+        'ifsc_encrypted': encrypt_bank_value(ifsc),
+        'bank_name_encrypted': encrypt_bank_value(bank_name),
+    }
+
+    if account_number:
+        encrypted_values['account_number_encrypted'] = (
+            encrypt_bank_value(account_number)
+        )
+        encrypted_values['account_last4'] = account_number[-4:]
+
+    if bank_details:
+        for field, value in encrypted_values.items():
+            setattr(bank_details, field, value)
+
+        bank_details.save()
+
+        messages.success(
+            request,
+            'Your bank details have been updated securely.'
+        )
+    else:
+        BankDetails.objects.create(
+            user=request.user,
+            **encrypted_values
+        )
+
+        messages.success(
+            request,
+            'Your bank details have been saved securely.'
+        )
+
+    return redirect('user_dashboard')

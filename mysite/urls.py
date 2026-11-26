@@ -35,6 +35,11 @@ urlpatterns = [
     path('signup/', views.signup, name='signup'),
     path('orders/', views.my_orders, name='orders'),
     path('my-dashboard/', views.user_dashboard, name='user_dashboard'),
+    path(
+    'my-dashboard/bank-details/',
+    views.manage_bank_details,
+    name='manage_bank_details'
+),
 
     path('dashboard/', views.dashboard, name='dashboard'),
     path('dashboard/live/', views.live_visitors_api, name='live_visitors_api'),
@@ -71,6 +76,11 @@ urlpatterns = [
         name='submit_return_request'
     ),
     path('dashboard/returns/', views.manage_returns, name='manage_returns'),
+
+path('dashboard/refunds/', views.manage_refunds, name='manage_refunds'),
+path('dashboard/refunds/<int:rr_id>/', views.refund_details, name='refund_details'),
+path('dashboard/refunds/<int:rr_id>/update/', views.update_refund, name='update_refund'),
+
     path(
         'dashboard/returns/<int:rr_id>/status/',
         views.update_return_status,

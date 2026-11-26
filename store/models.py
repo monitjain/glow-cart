@@ -76,6 +76,57 @@ class ReturnRequest(models.Model):
     status      = models.CharField(max_length=10, choices=STATUS_CHOICES, default='Pending')
     created_at  = models.DateTimeField(auto_now_add=True)
     admin_note  = models.TextField(blank=True, default='')
+        # Encrypted snapshot of the refund destination selected for this request
+    refund_account_holder_encrypted = models.TextField(blank=True, default='')
+    refund_account_number_encrypted = models.TextField(blank=True, default='')
+    refund_ifsc_encrypted = models.TextField(blank=True, default='')
+    refund_bank_name_encrypted = models.TextField(blank=True, default='')
+    refund_account_last4 = models.CharField(max_length=4, blank=True, default='')
+        # Separate refund payment tracking
+    REFUND_STATUS_CHOICES = [
+        ('Not Applicable', 'Not Applicable'),
+        ('Pending', 'Pending'),
+        ('Processing', 'Processing'),
+        ('Completed', 'Completed'),
+        ('Failed', 'Failed'),
+    ]
+
+    refund_status = models.CharField(
+        max_length=20,
+        choices=REFUND_STATUS_CHOICES,
+        default='Not Applicable'
+    )
+
+    refund_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        null=True,
+        blank=True
+    )
+
+    refund_transaction_reference = models.CharField(
+        max_length=100,
+        blank=True,
+        default=''
+    )
+
+    refund_processed_at = models.DateTimeField(
+        null=True,
+        blank=True
+    )
+
+    refund_admin_note = models.TextField(
+        blank=True,
+        default=''
+    )
+
+    refund_updated_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='updated_refunds'
+    )
 
     def __str__(self):
         return f"{self.request_type} for Order #{self.order.id} — {self.status}"
@@ -106,3 +157,24 @@ class SiteVisitor(models.Model):
 
     def __str__(self):
         return f"{self.session_key} — {self.last_seen}"
+class BankDetails(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='bank_details'
+    )
+
+    # Sensitive information is stored only as encrypted text
+    account_holder_encrypted = models.TextField()
+    account_number_encrypted = models.TextField()
+    ifsc_encrypted = models.TextField()
+    bank_name_encrypted = models.TextField(blank=True, default='')
+
+    # Safe to use for displaying a masked account number
+    account_last4 = models.CharField(max_length=4)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Bank details for user #{self.user_id}"        

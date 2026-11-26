@@ -229,7 +229,7 @@
     /* Quick actions */
     .quick-actions {
       display: grid;
-      grid-template-columns: repeat(5, minmax(0, 1fr));
+      grid-template-columns: repeat(6, minmax(0, 1fr));
       gap: 14px;
     }
 
@@ -560,6 +560,9 @@
       <a href="{% url 'manage_returns' %}" class="sidebar-link">
         <span>🔄</span> Returns
       </a>
+      <a href="{% url 'manage_refunds' %}" class="sidebar-link">
+    <span>💸</span> Refund Management
+</a>
 
       <div class="sidebar-label">System</div>
       <a href="/admin/" class="sidebar-link">
@@ -635,6 +638,13 @@
             <div class="dash-stat-label">Pending Returns</div>
           </div>
         </div>
+        <div class="dash-stat-card">
+    <div class="dash-icon dash-icon-gold">💸</div>
+    <div>
+        <div class="dash-stat-val">{{ pending_refunds }}</div>
+        <div class="dash-stat-label">Pending Refunds</div>
+    </div>
+</div>
 
         <div class="dash-stat-card">
           <div class="dash-icon dash-icon-blue">🔁</div>
@@ -691,6 +701,11 @@
             <div class="action-title">Returns</div>
             <div class="action-sub">{{ pending_returns }} pending request{{ pending_returns|pluralize }}</div>
           </a>
+          <a href="{% url 'manage_refunds' %}" class="action-card">
+    <div class="action-icon">💸</div>
+    <div class="action-title">Refund Management</div>
+    <div class="action-sub">{{ pending_refunds }} pending refund{{ pending_refunds|pluralize }}</div>
+</a>
 
           <a href="/admin/" class="action-card">
             <div class="action-icon">⚙️</div>
